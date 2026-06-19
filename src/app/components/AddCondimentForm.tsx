@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { X, Search, Image, Plus, Star, Repeat, ChevronDown } from 'lucide-react';
+import { X, Search, Image, Plus, Star, Repeat, ChevronDown, Loader2 } from 'lucide-react';
 import { TasteProfile, PurchaseLocation, PREFECTURES, Condiment } from '../types';
 import { TasteRadarChart } from './TasteRadarChart';
 import { Language, t, CATEGORY_KEYS, PURCHASE_LOCATION_KEYS } from '../i18n/translations';
+import { uploadCondimentImage } from '../../lib/storage';
 
 interface AddCondimentFormProps {
   onAdd: (condiment: {
@@ -21,6 +22,7 @@ interface AddCondimentFormProps {
   onClose: () => void;
   language: Language;
   condiments: Condiment[];
+  userId?: string;
 }
 
 const purchaseLocations: PurchaseLocation[] = [
@@ -45,7 +47,8 @@ const categories = [
   'その他'
 ];
 
-export function AddCondimentForm({ onAdd, onClose, language, condiments }: AddCondimentFormProps) {
+export function AddCondimentForm({ onAdd, onClose, language, condiments, userId }: AddCondimentFormProps) {
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     category: categories[0],
@@ -178,24 +181,43 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments }: AddCo
     setDishImageSearchQuery('');
   };
 
-  const handleImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    if (userId) {
+      setUploadingImage(true);
+      try {
+        const url = await uploadCondimentImage(file, userId);
+        setFormData(prev => ({ ...prev, imageUrl: url }));
+      } catch {
+        const reader = new FileReader();
+        reader.onloadend = () => setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+        reader.readAsDataURL(file);
+      } finally {
+        setUploadingImage(false);
+      }
+    } else {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, imageUrl: reader.result as string });
-      };
+      reader.onloadend = () => setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
       reader.readAsDataURL(file);
     }
   };
 
-  const handleDishImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDishImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    if (userId) {
+      try {
+        const url = await uploadCondimentImage(file, userId);
+        setFormData(prev => ({ ...prev, dishImageUrl: url }));
+      } catch {
+        const reader = new FileReader();
+        reader.onloadend = () => setFormData(prev => ({ ...prev, dishImageUrl: reader.result as string }));
+        reader.readAsDataURL(file);
+      }
+    } else {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, dishImageUrl: reader.result as string });
-      };
+      reader.onloadend = () => setFormData(prev => ({ ...prev, dishImageUrl: reader.result as string }));
       reader.readAsDataURL(file);
     }
   };
@@ -605,8 +627,8 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments }: AddCo
                       className="hidden"
                     />
                     <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                      <Image size={16} />
-                      {t(language, 'uploadImage')}
+                      {uploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
+                      {uploadingImage ? 'アップロード中...' : t(language, 'uploadImage')}
                     </div>
                   </label>
                   <button

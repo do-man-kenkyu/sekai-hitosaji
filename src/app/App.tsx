@@ -12,15 +12,21 @@ import { CategoryGrid } from './components/CategoryGrid';
 import { ChatPage } from './components/ChatPage';
 import { CombinationPage } from './components/CombinationPage';
 import { TrendsPage } from './components/TrendsPage';
+import { LoginModal } from './components/LoginModal';
+import { NotificationBell } from './components/NotificationBell';
 import { Condiment, User, AggregatedCondiment } from './types';
 import { aggregateCondiments } from './utils/aggregateCondiments';
 import { Language, t, CATEGORY_KEYS } from './i18n/translations';
+import { supabase } from '../lib/supabase';
+import { getProfile, signOut, updateProfile } from '../lib/auth';
+import { fetchCondiments, insertCondiment, deleteCondiment, fetchLikedIds, toggleLike, fetchBookmarkedIds, toggleBookmark } from '../lib/database';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ja');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [showUserRegistration, setShowUserRegistration] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showMyPage, setShowMyPage] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -165,28 +171,48 @@ export default function App() {
       setLanguage(storedLang);
     }
 
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
+    // Supabase 認証セッション監視
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await getProfile(session.user.id);
+        if (profile) {
+          setCurrentUser({ ...profile, email: session.user.email ?? '' });
+          const [likes, bookmarks] = await Promise.all([
+            fetchLikedIds(session.user.id),
+            fetchBookmarkedIds(session.user.id),
+          ]);
+          setLikedCondiments(likes);
+          setBookmarkedCondiments(bookmarks);
+        }
+      }
+    });
 
-    const storedUsers = localStorage.getItem('allUsers');
-    if (storedUsers) {
-      setAllUsers(JSON.parse(storedUsers));
-    }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const profile = await getProfile(session.user.id);
+        if (profile) {
+          setCurrentUser({ ...profile, email: session.user.email ?? '' });
+          const [likes, bookmarks] = await Promise.all([
+            fetchLikedIds(session.user.id),
+            fetchBookmarkedIds(session.user.id),
+          ]);
+          setLikedCondiments(likes);
+          setBookmarkedCondiments(bookmarks);
+        }
+        setShowLoginModal(false);
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        setLikedCondiments([]);
+        setBookmarkedCondiments([]);
+      }
+    });
 
-    const storedLikes = localStorage.getItem('likedCondiments');
-    if (storedLikes) {
-      setLikedCondiments(JSON.parse(storedLikes));
-    }
-
-    const storedBookmarks = localStorage.getItem('bookmarkedCondiments');
-    if (storedBookmarks) {
-      setBookmarkedCondiments(JSON.parse(storedBookmarks));
-    }
-
-    const stored = localStorage.getItem('condiments');
-    const dataVersion = localStorage.getItem('condimentsVersion');
+    // Supabase から調味料取得
+    fetchCondiments().then(data => {
+      if (data.length > 0) { setCondiments(data); return; }
+      // Supabase が空の場合はサンプルデータを localStorage から読む（移行期）
+      const stored = localStorage.getItem('condiments');
+      const dataVersion = localStorage.getItem('condimentsVersion');
 
     // Check if we need to migrate old data
     if (stored && dataVersion === '4.1') {
@@ -433,43 +459,30 @@ export default function App() {
         { id: '27', name: 'タバスコ', category: 'ソース', description: 'アメリカ発の有名なペッパーソース。ピザやパスタに数滴でパンチが出る。', origin: 'アメリカ', recommendedDishes: ['ピザ', 'パスタ', 'タコス', 'スープ', '卵料理'], repeatRating: 4, purchaseLocation: 'スーパー', tasteProfile: { sweetness: 0, sourness: 3, bitterness: 0, umami: 1, saltiness: 2, richness: 1, aroma: 3 }, imageUrl: 'https://images.unsplash.com/photo-1662523978645-8c0bfb15f2f8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixlib=rb-4.1.0&q=80&w=1080', postedBy: { userId: 'user25', nickname: '辛いもの好き', tasteBadges: ['辛党', '冒険派'] }, createdAt: new Date(Date.now() - 53 * 24 * 60 * 60 * 1000).toISOString() }
       ];
       setCondiments(sampleData);
-      localStorage.setItem('condiments', JSON.stringify(sampleData));
-      localStorage.setItem('condimentsVersion', '4.1');
-    }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleUserRegistration = (user: User) => {
     setCurrentUser(user);
-    localStorage.setItem('currentUser', JSON.stringify(user));
-
     const updatedUsers = [...allUsers, user];
     setAllUsers(updatedUsers);
-    localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
-
     setShowUserRegistration(false);
   };
 
-  const handleAddCondiment = (newCondiment: Omit<Condiment, 'id' | 'createdAt' | 'postedBy'>) => {
+  const handleAddCondiment = async (newCondiment: Omit<Condiment, 'id' | 'createdAt' | 'postedBy'>) => {
     if (!currentUser) {
-      alert('調味料を投稿するにはユーザー登録が必要です');
-      setShowUserRegistration(true);
+      setShowLoginModal(true);
       return;
     }
-
-    const condiment: Condiment = {
-      ...newCondiment,
-      id: Date.now().toString(),
-      postedBy: {
-        userId: currentUser.id,
-        nickname: currentUser.nickname,
-        tasteBadges: currentUser.tasteBadges
-      },
-      createdAt: new Date().toISOString()
-    };
-    const updated = [...condiments, condiment];
-    setCondiments(updated);
-    localStorage.setItem('condiments', JSON.stringify(updated));
-    localStorage.setItem('condimentsVersion', '4.0');
+    try {
+      const inserted = await insertCondiment(newCondiment, currentUser.id);
+      setCondiments(prev => [inserted, ...prev]);
+    } catch (err) {
+      console.error('投稿失敗:', err);
+      alert('投稿に失敗しました。もう一度お試しください。');
+    }
   };
 
   const handleViewUser = (userId: string, nickname: string) => {
@@ -481,41 +494,63 @@ export default function App() {
     return condiments.filter(c => c.postedBy.userId === userId);
   };
 
-  const handleToggleLike = (condimentId: string) => {
-    const newLikes = likedCondiments.includes(condimentId)
+  const handleToggleLike = async (condimentId: string) => {
+    if (!currentUser) { setShowLoginModal(true); return; }
+    const liked = likedCondiments.includes(condimentId);
+    const newLikes = liked
       ? likedCondiments.filter(id => id !== condimentId)
       : [...likedCondiments, condimentId];
     setLikedCondiments(newLikes);
-    localStorage.setItem('likedCondiments', JSON.stringify(newLikes));
+    try {
+      await toggleLike(currentUser.id, condimentId, liked);
+    } catch (err) {
+      setLikedCondiments(likedCondiments);
+      console.error('いいね失敗:', err);
+    }
   };
 
-  const handleToggleBookmark = (condimentId: string) => {
-    const newBookmarks = bookmarkedCondiments.includes(condimentId)
+  const handleToggleBookmark = async (condimentId: string) => {
+    if (!currentUser) { setShowLoginModal(true); return; }
+    const bookmarked = bookmarkedCondiments.includes(condimentId);
+    const newBookmarks = bookmarked
       ? bookmarkedCondiments.filter(id => id !== condimentId)
       : [...bookmarkedCondiments, condimentId];
     setBookmarkedCondiments(newBookmarks);
-    localStorage.setItem('bookmarkedCondiments', JSON.stringify(newBookmarks));
+    try {
+      await toggleBookmark(currentUser.id, condimentId, bookmarked);
+    } catch (err) {
+      setBookmarkedCondiments(bookmarkedCondiments);
+      console.error('ブックマーク失敗:', err);
+    }
   };
 
-  const handleUpdateUser = (updatedUser: User) => {
+  const handleUpdateUser = async (updatedUser: User) => {
     setCurrentUser(updatedUser);
-    localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+    try {
+      await updateProfile(updatedUser.id, {
+        nickname: updatedUser.nickname,
+        age: updatedUser.age,
+        gender: updatedUser.gender,
+        prefecture: updatedUser.prefecture,
+        city: updatedUser.city,
+        taste_badges: updatedUser.tasteBadges,
+      });
+    } catch (err) {
+      console.error('プロフィール更新失敗:', err);
+    }
     const updatedUsers = allUsers.map(u => u.id === updatedUser.id ? updatedUser : u);
     setAllUsers(updatedUsers);
-    localStorage.setItem('allUsers', JSON.stringify(updatedUsers));
   };
 
-  const handleDeletePost = (postId: string) => {
-    const updated = condiments.filter(c => c.id !== postId);
-    setCondiments(updated);
-    localStorage.setItem('condiments', JSON.stringify(updated));
-    // いいね・ブックマークからも削除
-    const newLikes = likedCondiments.filter(id => id !== postId);
-    setLikedCondiments(newLikes);
-    localStorage.setItem('likedCondiments', JSON.stringify(newLikes));
-    const newBookmarks = bookmarkedCondiments.filter(id => id !== postId);
-    setBookmarkedCondiments(newBookmarks);
-    localStorage.setItem('bookmarkedCondiments', JSON.stringify(newBookmarks));
+  const handleDeletePost = async (postId: string) => {
+    try {
+      await deleteCondiment(postId);
+    } catch (err) {
+      console.error('削除失敗:', err);
+    }
+    setCondiments(prev => prev.filter(c => c.id !== postId));
+    setLikedCondiments(prev => prev.filter(id => id !== postId));
+    setBookmarkedCondiments(prev => prev.filter(id => id !== postId));
   };
 
   const getLikedPosts = () => {
@@ -698,19 +733,28 @@ export default function App() {
               <span className="text-sm font-medium">{language === 'ja' ? 'AIチャット' : 'AI Chat'}</span>
             </button>
             <div className="flex-1" />
+            {currentUser && <NotificationBell currentUser={currentUser} />}
             <button
               onClick={() => {
                 if (currentUser) setShowMyPage(true);
-                else setShowUserRegistration(true);
+                else setShowLoginModal(true);
               }}
               className="flex items-center gap-2 px-4 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
             >
               <UserIcon size={16} />
               {currentUser ? currentUser.nickname : (language === 'ja' ? 'ログイン' : 'Sign In')}
             </button>
+            {currentUser && (
+              <button
+                onClick={() => { signOut(); }}
+                className="flex items-center gap-1 px-3 py-2 text-gray-400 hover:text-gray-600 text-xs border rounded-lg"
+              >
+                ログアウト
+              </button>
+            )}
             <button
               onClick={() => {
-                if (!currentUser) { alert(t(language, 'needRegistration')); setShowUserRegistration(true); }
+                if (!currentUser) { setShowLoginModal(true); }
                 else setShowAddForm(true);
               }}
               className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm ml-2"
@@ -806,7 +850,7 @@ export default function App() {
               <button
                 onClick={() => {
                   if (currentUser) setShowMyPage(true);
-                  else setShowUserRegistration(true);
+                  else setShowLoginModal(true);
                 }}
                 className="flex flex-col items-center gap-1 p-3 bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all shadow-sm group"
               >
@@ -830,7 +874,7 @@ export default function App() {
                 onClick={() => {
                   if (!currentUser) {
                     alert(t(language, 'needRegistration'));
-                    setShowUserRegistration(true);
+                    setShowLoginModal(true);
                   } else {
                     setShowAddForm(true);
                   }
@@ -936,7 +980,7 @@ export default function App() {
             <button
               onClick={() => {
                 if (!currentUser) {
-                  setShowUserRegistration(true);
+                  setShowLoginModal(true);
                 } else {
                   setShowAddForm(true);
                 }
@@ -1026,7 +1070,7 @@ export default function App() {
               <button
                 onClick={() => {
                   if (!currentUser) {
-                    setShowUserRegistration(true);
+                    setShowLoginModal(true);
                   } else {
                     setShowAddForm(true);
                   }
@@ -1101,7 +1145,7 @@ export default function App() {
           <button
             onClick={() => {
               if (currentUser) setShowMyPage(true);
-              else setShowUserRegistration(true);
+              else setShowLoginModal(true);
             }}
             className="flex flex-col items-center gap-1 px-4 py-3 text-gray-400 hover:text-purple-500 transition-colors"
           >
@@ -1113,7 +1157,7 @@ export default function App() {
             onClick={() => {
               if (!currentUser) {
                 alert(t(language, 'needRegistration'));
-                setShowUserRegistration(true);
+                setShowLoginModal(true);
               } else {
                 setShowAddForm(true);
               }
@@ -1132,6 +1176,7 @@ export default function App() {
           onClose={() => setShowAddForm(false)}
           language={language}
           condiments={condiments}
+          userId={currentUser?.id}
         />
       )}
 
@@ -1163,6 +1208,7 @@ export default function App() {
           onToggleBookmark={handleToggleBookmark}
           isLiked={likedCondiments.includes(selectedCondiment.id)}
           isBookmarked={bookmarkedCondiments.includes(selectedCondiment.id)}
+          currentUser={currentUser}
         />
       )}
 
@@ -1171,6 +1217,13 @@ export default function App() {
           onRegister={handleUserRegistration}
           onClose={() => setShowUserRegistration(false)}
           language={language}
+        />
+      )}
+
+      {showLoginModal && (
+        <LoginModal
+          onClose={() => setShowLoginModal(false)}
+          onSuccess={() => setShowLoginModal(false)}
         />
       )}
 

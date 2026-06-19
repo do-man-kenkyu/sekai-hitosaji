@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { X, Star, MapPin, Repeat, Globe, Heart, Bookmark, Languages, Loader } from 'lucide-react';
-import { Condiment } from '../types';
+import { Condiment, User } from '../types';
 import { TasteRadarChart } from './TasteRadarChart';
 import { TranslateModal } from './TranslateModal';
+import { Comments } from './Comments';
 import { Language, t, CATEGORY_KEYS, PURCHASE_LOCATION_KEYS } from '../i18n/translations';
 
 
@@ -14,9 +15,10 @@ interface CondimentDetailProps {
   onToggleBookmark: (condimentId: string) => void;
   isLiked: boolean;
   isBookmarked: boolean;
+  currentUser?: User | null;
 }
 
-export function CondimentDetail({ condiment, onClose, language, onToggleLike, onToggleBookmark, isLiked, isBookmarked }: CondimentDetailProps) {
+export function CondimentDetail({ condiment, onClose, language, onToggleLike, onToggleBookmark, isLiked, isBookmarked, currentUser }: CondimentDetailProps) {
   const [showTranslate, setShowTranslate] = useState(false);
   const [translateContent, setTranslateContent] = useState({ title: '', text: '' });
   const [descTranslations, setDescTranslations] = useState<Record<string, string>>({});
@@ -355,6 +357,9 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
                 <p className="text-gray-700 text-sm">{condiment.description}</p>
               </div>
             </div>
+          </div>
+          <div className="px-6 pb-6">
+            <Comments condimentId={condiment.id} currentUser={currentUser ?? null} />
           </div>
         </div>
       </div>
