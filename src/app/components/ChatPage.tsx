@@ -22,22 +22,24 @@ interface Message {
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com';
 
-// モデル優先順位（上から順に試す）
-const MODEL_PREFERENCES = [
+// 試すモデルの優先順位。無料枠が残りやすい軽量・旧世代モデルを先に試す。
+// 1つが枠切れ（quota/429）でも、順に次のモデルへ自動フォールバックする。
+const MODEL_CANDIDATES = [
+  'gemini-1.5-flash-8b',
   'gemini-1.5-flash',
   'gemini-1.5-flash-latest',
-  'gemini-1.5-pro',
+  'gemini-2.0-flash-lite',
   'gemini-2.0-flash',
-  'gemini-pro',
-  'gemini-1.0-pro',
+  'gemini-2.5-flash',
+  'gemini-1.5-pro',
 ];
 
-let resolvedModel: string | null = null;
+// 一度成功したモデルURLを覚えておく
+let workingModelUrl: string | null = null;
 
-async function detectModel(): Promise<string> {
-  if (resolvedModel) return resolvedModel;
-
-  // v1beta と v1 両方試す
+// このキーで実際に呼べるモデルURLの候補リストを作る（新しい順に試す用）
+async function getCandidateUrls(): Promise<string[]> {
+  const urls: string[] = [];
   for (const apiVer of ['v1beta', 'v1']) {
     try {
       const res = await fetch(`${GEMINI_BASE}/${apiVer}/models?key=${GEMINI_API_KEY}`);
@@ -46,21 +48,18 @@ async function detectModel(): Promise<string> {
       const available: string[] = (data.models ?? [])
         .map((m: { name: string }) => m.name.replace('models/', ''))
         .filter((n: string) => n.includes('gemini'));
-
-      for (const pref of MODEL_PREFERENCES) {
+      // 優先候補のうち、利用可能なものを順に追加
+      for (const pref of MODEL_CANDIDATES) {
         if (available.includes(pref)) {
-          resolvedModel = `${GEMINI_BASE}/${apiVer}/models/${pref}:generateContent?key=${GEMINI_API_KEY}`;
-          console.log(`[Gemini] detected model: ${pref} (${apiVer})`);
-          return resolvedModel;
+          urls.push(`${GEMINI_BASE}/${apiVer}/models/${pref}:generateContent?key=${GEMINI_API_KEY}`);
         }
       }
-      // 優先リストになくても最初のgeminiモデルを使う
-      if (available.length > 0) {
-        const picked = available[0];
-        resolvedModel = `${GEMINI_BASE}/${apiVer}/models/${picked}:generateContent?key=${GEMINI_API_KEY}`;
-        console.log(`[Gemini] fallback model: ${picked} (${apiVer})`);
-        return resolvedModel;
+      // 優先候補に無くても、残りの利用可能モデルも末尾に追加
+      for (const m of available) {
+        const u = `${GEMINI_BASE}/${apiVer}/models/${m}:generateContent?key=${GEMINI_API_KEY}`;
+        if (!urls.includes(u)) urls.push(u);
       }
+      if (urls.length > 0) return urls;
     } catch {
       // 次のAPIバージョンを試す
     }
@@ -128,8 +127,7 @@ ${condimentList}
 - When mentioning a site condiment, use its exact name (cards will auto-display)`;
 }
 
-async function callGemini(prompt: string, systemPrompt: string): Promise<string> {
-  const url = await detectModel();
+async function tryModel(url: string, prompt: string, systemPrompt: string): Promise<{ ok: boolean; text?: string; quota?: boolean; message?: string }> {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -138,13 +136,44 @@ async function callGemini(prompt: string, systemPrompt: string): Promise<string>
       generationConfig: { maxOutputTokens: 512, temperature: 0.7 },
     }),
   });
-  if (!res.ok) {
-    resolvedModel = null; // 失敗したらキャッシュをクリアして次回再検出
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  if (res.ok) {
+    const data = await res.json();
+    return { ok: true, text: data.candidates?.[0]?.content?.parts?.[0]?.text ?? '回答を取得できませんでした。' };
   }
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '回答を取得できませんでした。';
+  const err = await res.json().catch(() => ({}));
+  const message = err?.error?.message || `HTTP ${res.status}`;
+  // 429 / RESOURCE_EXHAUSTED は枠切れ → 次のモデルへ
+  const quota = res.status === 429 || /quota|exhausted|limit/i.test(message);
+  return { ok: false, quota, message };
+}
+
+async function callGemini(prompt: string, systemPrompt: string): Promise<string> {
+  // 前回成功したモデルがあればまずそれを試す
+  if (workingModelUrl) {
+    const r = await tryModel(workingModelUrl, prompt, systemPrompt);
+    if (r.ok) return r.text!;
+    workingModelUrl = null; // ダメなら再探索
+  }
+
+  const candidates = await getCandidateUrls();
+  let lastMessage = '';
+  for (const url of candidates) {
+    const modelName = url.split('/models/')[1]?.split(':')[0] ?? '?';
+    const r = await tryModel(url, prompt, systemPrompt);
+    if (r.ok) {
+      workingModelUrl = url;
+      console.log(`[Gemini] using model: ${modelName}`);
+      return r.text!;
+    }
+    lastMessage = r.message || '';
+    console.warn(`[Gemini] ${modelName} 失敗（${r.quota ? '枠切れ' : 'エラー'}）: ${lastMessage}`);
+    // 枠切れ以外の致命的エラー（無効キー等）なら即中断
+    if (!r.quota && /API key|invalid|permission|PERMISSION/i.test(lastMessage)) {
+      throw new Error(lastMessage);
+    }
+    // それ以外（枠切れ含む）は次のモデルへ
+  }
+  throw new Error(`すべてのモデルで失敗しました。最後のエラー: ${lastMessage}`);
 }
 
 function findRelatedCondiments(responseText: string, condiments: Condiment[]): Condiment[] {
