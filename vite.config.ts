@@ -17,8 +17,8 @@ function figmaAssetResolver() {
 }
 
 export default defineConfig(({ command }) => ({
-  // GitHub Pages はサブパス（/soce-web/）で配信されるため、本番ビルド時のみ base を設定
-  base: command === 'build' ? '/soce-web/' : '/',
+  // GitHub Pages はサブパス（/sekai-hitosaji/）で配信されるため、本番ビルド時のみ base を設定
+  base: command === 'build' ? '/sekai-hitosaji/' : '/',
   plugins: [
     figmaAssetResolver(),
     // The React and Tailwind plugins are both required for Make, even if
