@@ -113,11 +113,12 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
   const optionsB = CONDIMENT_OPTIONS.filter(o => o !== condimentA);
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50">
-      <div className="bg-[#faf7f2] w-full sm:max-w-lg sm:rounded-2xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-t-2xl shadow-2xl border-t border-[#e2d5c0]">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-stretch sm:items-center justify-center z-50">
+      <div className="bg-[#faf7f2] w-full sm:max-w-lg sm:rounded-2xl h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[88vh] flex flex-col sm:rounded-t-2xl shadow-2xl border-t border-[#e2d5c0]">
 
         {/* Header */}
-        <div className="bg-[#3d1f00] px-4 py-3 flex items-center justify-between rounded-t-2xl flex-shrink-0">
+        <div className="bg-[#3d1f00] px-4 py-3 flex items-center justify-between sm:rounded-t-2xl flex-shrink-0"
+             style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-[#c17f3a] rounded-full flex items-center justify-center shadow">
               <Sparkles size={18} className="text-white" />
