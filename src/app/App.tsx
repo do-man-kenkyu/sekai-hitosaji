@@ -279,7 +279,7 @@ export default function App() {
           repeatRating: 4.5,
           purchaseLocation: '専門店',
           tasteProfile: { sweetness: 0, sourness: 1, bitterness: 3, umami: 1, saltiness: 2, richness: 1, aroma: 5 },
-          imageUrl: '/condiments/03_a.jpg',
+          imageUrl: '/condiments/03_a.jpeg',
           dishImageUrl: '/condiments/03_b.jpg',
           postedBy: { userId: 'dohman', nickname: '道満調味料研究所', tasteBadges: ['調味料オタク', '伝統派'] },
           createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
@@ -384,7 +384,7 @@ export default function App() {
           repeatRating: 4.5,
           purchaseLocation: 'オンライン',
           tasteProfile: { sweetness: 0, sourness: 0, bitterness: 0, umami: 3, saltiness: 4, richness: 1, aroma: 2 },
-          imageUrl: '/condiments/10_a.jpg',
+          imageUrl: '/condiments/10_a.jpeg',
           dishImageUrl: '/condiments/10_b.jpeg',
           postedBy: { userId: 'dohman', nickname: '道満調味料研究所', tasteBadges: ['調味料オタク', '地産地消'] },
           createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
@@ -399,7 +399,7 @@ export default function App() {
           repeatRating: 4.5,
           purchaseLocation: 'オンライン',
           tasteProfile: { sweetness: 0, sourness: 0, bitterness: 0, umami: 2, saltiness: 4, richness: 1, aroma: 2 },
-          imageUrl: '/condiments/11_a.jpg',
+          imageUrl: '/condiments/11_a.jpeg',
           dishImageUrl: '/condiments/11_b.jpeg',
           postedBy: { userId: 'dohman', nickname: '道満調味料研究所', tasteBadges: ['調味料オタク', '地産地消'] },
           createdAt: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000).toISOString()
@@ -414,7 +414,7 @@ export default function App() {
           repeatRating: 5,
           purchaseLocation: 'オンライン',
           tasteProfile: { sweetness: 0, sourness: 0, bitterness: 1, umami: 2, saltiness: 4, richness: 2, aroma: 3 },
-          imageUrl: '/condiments/12_a.jpg',
+          imageUrl: '/condiments/12_a.jpeg',
           dishImageUrl: '/condiments/12_b.jpeg',
           postedBy: { userId: 'dohman', nickname: '道満調味料研究所', tasteBadges: ['調味料オタク', '希少品コレクター'] },
           createdAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString()
@@ -474,7 +474,7 @@ export default function App() {
           repeatRating: 5,
           purchaseLocation: 'オンライン',
           tasteProfile: { sweetness: 2, sourness: 1, bitterness: 2, umami: 3, saltiness: 2, richness: 1, aroma: 4 },
-          imageUrl: '/condiments/16_a.jpg',
+          imageUrl: '/condiments/16_a.png',
           dishImageUrl: '/condiments/16_b.png',
           postedBy: { userId: 'dohman', nickname: '道満調味料研究所', tasteBadges: ['調味料オタク', '万能型'] },
           createdAt: new Date(Date.now() - 16 * 24 * 60 * 60 * 1000).toISOString()
@@ -489,7 +489,7 @@ export default function App() {
           repeatRating: 4.5,
           purchaseLocation: 'オンライン',
           tasteProfile: { sweetness: 3, sourness: 0, bitterness: 0, umami: 4, saltiness: 3, richness: 2, aroma: 3 },
-          imageUrl: '/condiments/17_a.jpg',
+          imageUrl: '/condiments/17_a.jpeg',
           dishImageUrl: '/condiments/17_b.jpeg',
           postedBy: { userId: 'dohman', nickname: '道満調味料研究所', tasteBadges: ['調味料オタク', '旨味好き'] },
           createdAt: new Date(Date.now() - 17 * 24 * 60 * 60 * 1000).toISOString()

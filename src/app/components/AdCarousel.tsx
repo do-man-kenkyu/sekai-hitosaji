@@ -29,7 +29,7 @@ const ADS: Ad[] = [
     title: '天然塩の専門店',
     sponsor: 'Solco',
     description: '日本各地の海からとれたこだわりの塩',
-    imageUrl: '/condiments/10_a.jpg',
+    imageUrl: '/condiments/10_a.jpeg',
     linkUrl: '#',
     bgColor: '#5c3d20',
   },
