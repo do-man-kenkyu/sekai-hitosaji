@@ -26,7 +26,7 @@ import { aggregateCondiments } from './utils/aggregateCondiments';
 import { Language, t, CATEGORY_KEYS } from './i18n/translations';
 import { supabase } from '../lib/supabase';
 import { getProfile, signOut, updateProfile } from '../lib/auth';
-import { fetchCondiments, insertCondiment, deleteCondiment, fetchLikedIds, toggleLike, fetchBookmarkedIds, toggleBookmark } from '../lib/database';
+import { fetchCondiments, insertCondiment, updateCondiment, deleteCondiment, fetchLikedIds, toggleLike, fetchBookmarkedIds, toggleBookmark } from '../lib/database';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('ja');
@@ -43,6 +43,7 @@ export default function App() {
   const [isMobileView, setIsMobileView] = useState(false);
   const [condiments, setCondiments] = useState<Condiment[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingCondiment, setEditingCondiment] = useState<Condiment | null>(null);
   const [shareModalName, setShareModalName] = useState<string | null>(null);
   const [selectedAggregated, setSelectedAggregated] = useState<AggregatedCondiment | null>(null);
   const [selectedUserPosts, setSelectedUserPosts] = useState<{ userId: string; nickname: string } | null>(null);
@@ -601,9 +602,16 @@ export default function App() {
       return;
     }
     try {
-      const inserted = await insertCondiment(newCondiment, currentUser.id);
-      setCondiments(prev => [inserted, ...prev]);
-      setShareModalName(inserted.name);
+      if (editingCondiment) {
+        // 編集モード：既存の投稿を更新
+        const updated = await updateCondiment(editingCondiment.id, newCondiment);
+        setCondiments(prev => prev.map(c => c.id === updated.id ? updated : c));
+        setEditingCondiment(null);
+      } else {
+        const inserted = await insertCondiment(newCondiment, currentUser.id);
+        setCondiments(prev => [inserted, ...prev]);
+        setShareModalName(inserted.name);
+      }
     } catch (err) {
       console.error('投稿失敗:', err);
       alert('投稿に失敗しました。もう一度お試しください。');
@@ -1318,10 +1326,11 @@ export default function App() {
       {showAddForm && (
         <AddCondimentForm
           onAdd={handleAddCondiment}
-          onClose={() => setShowAddForm(false)}
+          onClose={() => { setShowAddForm(false); setEditingCondiment(null); }}
           language={language}
           condiments={condiments}
           userId={currentUser?.id}
+          editingCondiment={editingCondiment}
         />
       )}
 
@@ -1396,11 +1405,12 @@ export default function App() {
           likedPosts={getLikedPosts()}
           bookmarkedPosts={getBookmarkedPosts()}
           onClose={() => setShowMyPage(false)}
-          onViewCondiment={setSelectedCondiment}
+          onViewCondiment={(c) => { setShowMyPage(false); setSelectedCondiment(c); }}
           language={language}
           onToggleLike={handleToggleLike}
           onToggleBookmark={handleToggleBookmark}
           onDeletePost={handleDeletePost}
+          onEditPost={(post) => { setEditingCondiment(post); setShowMyPage(false); setShowAddForm(true); }}
           onUpdateUser={handleUpdateUser}
           likedCondiments={likedCondiments}
           bookmarkedCondiments={bookmarkedCondiments}

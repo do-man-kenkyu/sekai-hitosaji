@@ -23,6 +23,7 @@ interface MyPageProps {
   onToggleLike: (condimentId: string) => void;
   onToggleBookmark: (condimentId: string) => void;
   onDeletePost: (postId: string) => void;
+  onEditPost: (post: Condiment) => void;
   onUpdateUser: (user: User) => void;
   likedCondiments: string[];
   bookmarkedCondiments: string[];
@@ -37,9 +38,10 @@ interface PostCardProps {
   isBookmarked: boolean;
   language: Language;
   onDeletePost?: (postId: string) => void;
+  onEditPost?: (post: Condiment) => void;
 }
 
-function PostCard({ post, onViewCondiment, onToggleLike, onToggleBookmark, isLiked, isBookmarked, language, onDeletePost }: PostCardProps) {
+function PostCard({ post, onViewCondiment, onToggleLike, onToggleBookmark, isLiked, isBookmarked, language, onDeletePost, onEditPost }: PostCardProps) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white">
@@ -83,10 +85,19 @@ function PostCard({ post, onViewCondiment, onToggleLike, onToggleBookmark, isLik
             >
               <Bookmark size={14} className={isBookmarked ? 'fill-yellow-600' : ''} />
             </button>
+            {onEditPost && !confirmDelete && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onEditPost(post); }}
+                className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-blue-600 transition-colors ml-auto"
+              >
+                <Pencil size={14} />
+                {language === 'ja' ? '編集' : 'Edit'}
+              </button>
+            )}
             {onDeletePost && !confirmDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-                className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors ml-auto"
+                className={`flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-500 transition-colors ${onEditPost ? '' : 'ml-auto'}`}
               >
                 <Trash2 size={14} />
               </button>
@@ -115,7 +126,7 @@ function PostCard({ post, onViewCondiment, onToggleLike, onToggleBookmark, isLik
   );
 }
 
-export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onViewCondiment, language, onToggleLike, onToggleBookmark, onDeletePost, onUpdateUser, likedCondiments, bookmarkedCondiments }: MyPageProps) {
+export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onViewCondiment, language, onToggleLike, onToggleBookmark, onDeletePost, onEditPost, onUpdateUser, likedCondiments, bookmarkedCondiments }: MyPageProps) {
   const [activeTab, setActiveTab] = useState<'posts' | 'likes' | 'bookmarks'>('posts');
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
@@ -451,6 +462,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                         isBookmarked={bookmarkedCondiments.includes(post.id)}
                         language={language}
                         onDeletePost={onDeletePost}
+                        onEditPost={onEditPost}
                       />
                     ))}
                   </div>

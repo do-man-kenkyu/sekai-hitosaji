@@ -23,6 +23,7 @@ interface AddCondimentFormProps {
   language: Language;
   condiments: Condiment[];
   userId?: string;
+  editingCondiment?: Condiment | null;
 }
 
 const purchaseLocations: PurchaseLocation[] = [
@@ -47,19 +48,20 @@ const categories = [
   'その他'
 ];
 
-export function AddCondimentForm({ onAdd, onClose, language, condiments, userId }: AddCondimentFormProps) {
+export function AddCondimentForm({ onAdd, onClose, language, condiments, userId, editingCondiment }: AddCondimentFormProps) {
+  const isEditing = !!editingCondiment;
   const [uploadingImage, setUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    category: categories[0],
-    description: '',
-    origin: '',
-    imageUrl: '',
-    dishImageUrl: '',
-    repeatRating: 3,
-    purchaseLocation: 'スーパー' as PurchaseLocation
+    name: editingCondiment?.name ?? '',
+    category: editingCondiment?.category ?? categories[0],
+    description: editingCondiment?.description ?? '',
+    origin: editingCondiment?.origin ?? '',
+    imageUrl: editingCondiment?.imageUrl ?? '',
+    dishImageUrl: editingCondiment?.dishImageUrl ?? '',
+    repeatRating: editingCondiment?.repeatRating ?? 3,
+    purchaseLocation: (editingCondiment?.purchaseLocation ?? 'スーパー') as PurchaseLocation
   });
-  const [tasteProfile, setTasteProfile] = useState<TasteProfile>({
+  const [tasteProfile, setTasteProfile] = useState<TasteProfile>(editingCondiment?.tasteProfile ?? {
     sweetness: 0,
     sourness: 0,
     bitterness: 0,
@@ -68,7 +70,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId 
     richness: 0,
     aroma: 0
   });
-  const [recommendedDishes, setRecommendedDishes] = useState<string[]>([]);
+  const [recommendedDishes, setRecommendedDishes] = useState<string[]>(editingCondiment?.recommendedDishes ?? []);
   const [newDish, setNewDish] = useState('');
   const [pairingCondiments, setPairingCondiments] = useState<string[]>([]);
   const [showPairingPicker, setShowPairingPicker] = useState(false);
@@ -94,11 +96,16 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // 「＋」ボタンを押さずに入力途中の料理があれば取り込む
+    const pendingDish = newDish.trim();
+    const finalDishes = pendingDish && !recommendedDishes.includes(pendingDish)
+      ? [...recommendedDishes, pendingDish]
+      : recommendedDishes;
     if (formData.name && formData.description && formData.origin && formData.imageUrl) {
       onAdd({
         ...formData,
         dishImageUrl: formData.dishImageUrl || undefined,
-        recommendedDishes,
+        recommendedDishes: finalDishes,
         pairingCondiments,
         tasteProfile
       });
@@ -226,7 +233,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId 
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold">{t(language, 'addCondimentTitle')}</h2>
+          <h2 className="text-xl font-semibold">{isEditing ? (language === 'ja' ? '投稿を編集' : 'Edit Post') : t(language, 'addCondimentTitle')}</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
@@ -839,7 +846,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId 
               type="submit"
               className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             >
-              {t(language, 'add')}
+              {isEditing ? (language === 'ja' ? '更新する' : 'Update') : t(language, 'add')}
             </button>
           </div>
         </form>

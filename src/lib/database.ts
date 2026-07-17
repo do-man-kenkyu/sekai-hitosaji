@@ -57,6 +57,30 @@ export async function insertCondiment(
   return rowToCondiment(data);
 }
 
+export async function updateCondiment(
+  id: string,
+  condiment: Omit<Condiment, 'id' | 'createdAt' | 'postedBy'>
+): Promise<Condiment> {
+  const { data, error } = await supabase
+    .from('condiments')
+    .update({
+      name: condiment.name,
+      category: condiment.category,
+      description: condiment.description,
+      origin: condiment.origin,
+      recommended_dishes: condiment.recommendedDishes,
+      repeat_rating: condiment.repeatRating,
+      purchase_location: condiment.purchaseLocation,
+      taste_profile: condiment.tasteProfile as any,
+      image_url: condiment.imageUrl,
+    })
+    .eq('id', id)
+    .select('*, profiles(nickname, taste_badges)')
+    .single();
+  if (error) throw error;
+  return rowToCondiment(data);
+}
+
 export async function deleteCondiment(id: string) {
   const { error } = await supabase.from('condiments').delete().eq('id', id);
   if (error) throw error;
