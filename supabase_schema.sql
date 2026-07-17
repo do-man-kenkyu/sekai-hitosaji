@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.condiments (
   description        TEXT NOT NULL,
   origin             TEXT NOT NULL,
   recommended_dishes TEXT[] DEFAULT '{}',
+  pairing_condiments TEXT[] DEFAULT '{}',
   repeat_rating      INTEGER NOT NULL CHECK (repeat_rating BETWEEN 1 AND 5),
   purchase_location  TEXT NOT NULL,
   taste_profile      JSONB NOT NULL DEFAULT '{}',

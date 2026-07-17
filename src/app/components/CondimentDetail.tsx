@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Star, MapPin, Globe, Heart, Bookmark, ChevronLeft, Utensils, ShoppingBag, User } from 'lucide-react';
+import { X, Star, MapPin, Globe, Heart, Bookmark, ChevronLeft, Utensils, ShoppingBag, User, Sparkles } from 'lucide-react';
 import { Condiment, User as UserType } from '../types';
 import { TasteRadarChart } from './TasteRadarChart';
 import { TranslateModal } from './TranslateModal';
@@ -156,6 +156,25 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
                 {condiment.recommendedDishes.map((dish, i) => (
                   <span key={i} className="px-3 py-1.5 bg-white/10 text-[#e8d5b0] text-sm rounded-lg border border-white/10 font-medium">
                     {dish}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pairing condiments */}
+          {condiment.pairingCondiments && condiment.pairingCondiments.length > 0 && (
+            <div className="bg-white rounded-2xl border border-[#e2d5c0] overflow-hidden">
+              <div className="px-4 py-2 border-b border-[#e2d5c0] bg-[#faf7f2] flex items-center gap-2">
+                <Sparkles size={13} className="text-[#c17f3a]" />
+                <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">
+                  {language === 'ja' ? '相性のよい調味料' : 'Pairs Well With'}
+                </span>
+              </div>
+              <div className="px-4 py-3 flex flex-wrap gap-2">
+                {condiment.pairingCondiments.map((name, i) => (
+                  <span key={i} className="px-3 py-1.5 bg-[#fdf5ea] border border-[#e8d5b0] rounded-lg text-sm text-[#7c4a1e] font-medium">
+                    {name}
                   </span>
                 ))}
               </div>
