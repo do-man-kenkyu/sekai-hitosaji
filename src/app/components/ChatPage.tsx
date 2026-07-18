@@ -128,12 +128,18 @@ ${condimentList}
 }
 
 async function tryModel(url: string, prompt: string, systemPrompt: string): Promise<{ ok: boolean; text?: string; quota?: boolean; message?: string }> {
+  // gemini-2.5 系は「思考」に出力トークンを消費し回答が途中で切れるため、思考をオフにする
+  const isThinkingModel = /2\.5/.test(url);
+  const generationConfig: Record<string, unknown> = { maxOutputTokens: 1024, temperature: 0.7 };
+  if (isThinkingModel) {
+    generationConfig.thinkingConfig = { thinkingBudget: 0 };
+  }
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       contents: [{ role: 'user', parts: [{ text: `${systemPrompt}\n\nユーザーの質問: ${prompt}` }] }],
-      generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+      generationConfig,
     }),
   });
   if (res.ok) {
