@@ -149,6 +149,27 @@ export interface Database {
         };
         Update: { read?: boolean };
       };
+      inquiries: {
+        Row: {
+          id: string;
+          name: string;
+          email: string;
+          subject: string;
+          message: string;
+          user_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          email: string;
+          subject: string;
+          message: string;
+          user_id?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+      };
     };
   };
 }

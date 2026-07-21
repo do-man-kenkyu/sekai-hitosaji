@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { X, Users, User as UserIcon, BarChart3, Search, Package } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail } from 'lucide-react';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { getMonthlySearchStats } from '../searchLog';
+import { fetchInquiries, Inquiry } from '../../lib/inquiries';
 
 interface AdminPanelProps {
   users: User[];
@@ -11,10 +12,21 @@ interface AdminPanelProps {
   language: Language;
 }
 
-type Tab = 'stats' | 'condiments' | 'search';
+type Tab = 'stats' | 'condiments' | 'search' | 'inquiries';
 
 export function AdminPanel({ users, condiments, onClose, language }: AdminPanelProps) {
   const [tab, setTab] = useState<Tab>('stats');
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [inquiriesLoading, setInquiriesLoading] = useState(false);
+
+  useEffect(() => {
+    if (tab !== 'inquiries') return;
+    setInquiriesLoading(true);
+    fetchInquiries()
+      .then(setInquiries)
+      .catch(err => console.error('お問い合わせの取得に失敗:', err))
+      .finally(() => setInquiriesLoading(false));
+  }, [tab]);
 
   const genderCounts = users.reduce((acc, user) => {
     acc[user.gender] = (acc[user.gender] || 0) + 1;
@@ -44,6 +56,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     { key: 'stats', label: language === 'ja' ? '統計' : 'Stats', icon: <BarChart3 size={15} /> },
     { key: 'condiments', label: language === 'ja' ? '調味料別投稿者' : 'By Condiment', icon: <Package size={15} /> },
     { key: 'search', label: language === 'ja' ? '月別検索' : 'Searches', icon: <Search size={15} /> },
+    { key: 'inquiries', label: t(language, 'inquiries'), icon: <Mail size={15} /> },
   ];
 
   return (
@@ -254,6 +267,36 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                           </div>
                         ))}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {/* ── お問い合わせタブ ── */}
+          {tab === 'inquiries' && (
+            <>
+              {inquiriesLoading ? (
+                <div className="text-center py-12 text-gray-500">
+                  {language === 'ja' ? '読み込み中...' : 'Loading...'}
+                </div>
+              ) : inquiries.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  {t(language, 'noInquiries')}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {inquiries.map(inquiry => (
+                    <div key={inquiry.id} className="border border-[#e2d5c0] rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-semibold text-[#3d1f00]">{inquiry.subject}</h4>
+                        <span className="text-xs text-gray-400">
+                          {new Date(inquiry.createdAt).toLocaleString(language === 'ja' ? 'ja-JP' : 'en-US')}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{inquiry.message}</p>
+                      <p className="text-xs text-gray-500">{inquiry.name} &lt;{inquiry.email}&gt;</p>
                     </div>
                   ))}
                 </div>

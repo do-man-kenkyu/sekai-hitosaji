@@ -22,6 +22,14 @@ VITE_SUPABASE_ANON_KEY=sb_publishable_P2BsX2LUlEd1mdYIXcCS1A_AbP7Cr76
 
 これが存在しない場合、Supabase クライアントがモジュール読み込み時に `throw` するため、アプリが真っ白になる（コンソールエラーも出ない）。
 
+お問い合わせフォームの通知メール送信（[EmailJS](https://www.emailjs.com/)）には以下が必要（未設定でも問い合わせ自体はSupabaseに保存され、コンソール警告が出るだけでアプリは動く）：
+
+```
+VITE_EMAILJS_SERVICE_ID=
+VITE_EMAILJS_TEMPLATE_ID=
+VITE_EMAILJS_PUBLIC_KEY=
+```
+
 ## アーキテクチャ
 
 ### 状態管理

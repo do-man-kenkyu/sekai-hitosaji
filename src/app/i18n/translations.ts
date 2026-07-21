@@ -136,6 +136,18 @@ export const translations = {
     // Alerts
     needRegistration: '調味料を投稿するにはユーザー登録が必要です',
     fillAllFields: 'すべてのフィールドを入力してください',
+
+    // Contact
+    contactUs: 'お問い合わせ',
+    contactTitle: 'お問い合わせ',
+    yourName: 'お名前',
+    yourEmail: 'メールアドレス',
+    contactSubject: '件名',
+    contactMessage: 'お問い合わせ内容',
+    contactSuccess: 'お問い合わせを送信しました。ご連絡ありがとうございます。',
+    contactFailed: '送信に失敗しました。もう一度お試しください。',
+    inquiries: 'お問い合わせ',
+    noInquiries: 'お問い合わせはまだありません',
   },
   en: {
     // Header
@@ -272,6 +284,18 @@ export const translations = {
     // Alerts
     needRegistration: 'You need to register to post condiments',
     fillAllFields: 'Please fill in all fields',
+
+    // Contact
+    contactUs: 'Contact Us',
+    contactTitle: 'Contact Us',
+    yourName: 'Your Name',
+    yourEmail: 'Your Email',
+    contactSubject: 'Subject',
+    contactMessage: 'Message',
+    contactSuccess: 'Your inquiry has been sent. Thank you for reaching out.',
+    contactFailed: 'Failed to send. Please try again.',
+    inquiries: 'Inquiries',
+    noInquiries: 'No inquiries yet',
   },
   zh: {
     // Header

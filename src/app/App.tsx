@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, User as UserIcon, Shield, MessageCircle, Home, Grid, TrendingUp, MapPin, Users, Sparkles, Trophy, Menu, X as XIcon, Star, ChevronLeft } from 'lucide-react';
+import { Plus, Search, User as UserIcon, Shield, MessageCircle, Home, Grid, TrendingUp, MapPin, Users, Sparkles, Trophy, Menu, X as XIcon, Star, ChevronLeft, Mail } from 'lucide-react';
 import { CondimentCard } from './components/CondimentCard';
 import { AddCondimentForm } from './components/AddCondimentForm';
 import { CondimentReviews } from './components/CondimentReviews';
@@ -18,6 +18,7 @@ import { NotificationBell } from './components/NotificationBell';
 import { ShareModal } from './components/ShareModal';
 import { AdCarousel } from './components/AdCarousel';
 import { CondimentMap } from './components/CondimentMap';
+import { ContactModal } from './components/ContactModal';
 import { isAdmin } from './admin';
 import { logSearch } from './searchLog';
 import { CategoryIllustration } from './components/CategoryIllustration';
@@ -39,6 +40,7 @@ export default function App() {
   const [showMyPage, setShowMyPage] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showCombination, setShowCombination] = useState(false);
+  const [showContact, setShowContact] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'search' | 'trends' | 'ranking'>('home');
   const [showNavMenu, setShowNavMenu] = useState(false);
   const [condiments, setCondiments] = useState<Condiment[]>([]);
@@ -941,6 +943,13 @@ export default function App() {
                 <Sparkles size={16} />
                 <span className="text-sm">{language === 'ja' ? '組み合わせ' : 'Combine'}</span>
               </button>
+              <button
+                onClick={() => { setShowContact(true); setShowNavMenu(false); }}
+                className="flex items-center gap-2 px-5 py-3 rounded-xl text-[#a07850] hover:bg-[#fdf5ea] hover:text-[#3d1f00] transition-colors"
+              >
+                <Mail size={16} />
+                <span className="text-sm">{t(language, 'contactUs')}</span>
+              </button>
             </div>
           </div>
         )}
@@ -1244,6 +1253,15 @@ export default function App() {
         <div className="mt-6 text-center text-xs text-gray-400">
           {t(language, 'totalPosts', { count: condiments.length })} / {t(language, 'totalTypes', { count: aggregatedCondiments.length })}
         </div>
+        <div className="mt-2 text-center">
+          <button
+            onClick={() => setShowContact(true)}
+            className="inline-flex items-center gap-1 text-xs text-[#a07850] hover:text-[#3d1f00] transition-colors"
+          >
+            <Mail size={12} />
+            {t(language, 'contactUs')}
+          </button>
+        </div>
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#faf7f2] border-t border-[#e2d5c0] z-40 safe-area-bottom sm:hidden">
@@ -1424,6 +1442,13 @@ export default function App() {
         <CombinationPage
           onClose={() => setShowCombination(false)}
           language={language}
+        />
+      )}
+      {showContact && (
+        <ContactModal
+          onClose={() => setShowContact(false)}
+          language={language}
+          currentUser={currentUser}
         />
       )}
       </div>
