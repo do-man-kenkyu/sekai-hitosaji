@@ -101,7 +101,6 @@ export const translations = {
     repeatRatingLabel: 'リピート度 (1-5)',
     condimentImageLabel: '調味料の画像（必須）',
     uploadImage: '画像をアップロード',
-    searchImage: '画像を検索',
     dishImageLabel: '料理の画像（任意）',
     recommendedDishesLabel: 'おすすめ料理（カンマ区切り）',
     recommendedDishesPlaceholder: '例: 刺身, 煮物, 炒め物',
@@ -113,8 +112,6 @@ export const translations = {
     saltiness: '塩味',
     richness: '濃厚さ',
     aroma: '香り',
-    imageSearchPlaceholder: '画像を検索...',
-    searching: '検索中...',
 
     // User Registration
     userRegistrationTitle: 'ユーザー登録',
@@ -240,7 +237,6 @@ export const translations = {
     repeatRatingLabel: 'Repeat Rating (1-5)',
     condimentImageLabel: 'Condiment Image (Required)',
     uploadImage: 'Upload Image',
-    searchImage: 'Search Image',
     dishImageLabel: 'Dish Image (Optional)',
     recommendedDishesLabel: 'Recommended Dishes (comma-separated)',
     recommendedDishesPlaceholder: 'e.g., Sashimi, Stew, Stir-fry',
@@ -252,8 +248,6 @@ export const translations = {
     saltiness: 'Saltiness',
     richness: 'Richness',
     aroma: 'Aroma',
-    imageSearchPlaceholder: 'Search images...',
-    searching: 'Searching...',
 
     // User Registration
     userRegistrationTitle: 'User Registration',
@@ -379,7 +373,6 @@ export const translations = {
     repeatRatingLabel: 'Repeat Rating (1-5)',
     condimentImageLabel: 'Condiment Image (Required)',
     uploadImage: 'Upload Image',
-    searchImage: 'Search Image',
     dishImageLabel: 'Dish Image (Optional)',
     recommendedDishesLabel: 'Recommended Dishes (comma-separated)',
     recommendedDishesPlaceholder: 'e.g., Sashimi, Stew, Stir-fry',
@@ -391,8 +384,6 @@ export const translations = {
     saltiness: '咸味',
     richness: '浓郁',
     aroma: '香气',
-    imageSearchPlaceholder: 'Search images...',
-    searching: 'Searching...',
 
     // User Registration
     userRegistrationTitle: 'User Registration',
@@ -518,7 +509,6 @@ export const translations = {
     repeatRatingLabel: 'Repeat Rating (1-5)',
     condimentImageLabel: 'Condiment Image (Required)',
     uploadImage: 'Upload Image',
-    searchImage: 'Search Image',
     dishImageLabel: 'Dish Image (Optional)',
     recommendedDishesLabel: 'Recommended Dishes (comma-separated)',
     recommendedDishesPlaceholder: 'e.g., Sashimi, Stew, Stir-fry',
@@ -530,8 +520,6 @@ export const translations = {
     saltiness: '짠맛',
     richness: '농후함',
     aroma: '향',
-    imageSearchPlaceholder: 'Search images...',
-    searching: 'Searching...',
 
     // User Registration
     userRegistrationTitle: 'User Registration',
@@ -657,7 +645,6 @@ export const translations = {
     repeatRatingLabel: 'Repeat Rating (1-5)',
     condimentImageLabel: 'Condiment Image (Required)',
     uploadImage: 'Upload Image',
-    searchImage: 'Search Image',
     dishImageLabel: 'Dish Image (Optional)',
     recommendedDishesLabel: 'Recommended Dishes (comma-separated)',
     recommendedDishesPlaceholder: 'e.g., Sashimi, Stew, Stir-fry',
@@ -669,8 +656,6 @@ export const translations = {
     saltiness: 'Saltiness',
     richness: 'Richness',
     aroma: 'Aroma',
-    imageSearchPlaceholder: 'Search images...',
-    searching: 'Searching...',
 
     // User Registration
     userRegistrationTitle: 'User Registration',
@@ -796,7 +781,6 @@ export const translations = {
     repeatRatingLabel: 'Repeat Rating (1-5)',
     condimentImageLabel: 'Condiment Image (Required)',
     uploadImage: 'Upload Image',
-    searchImage: 'Search Image',
     dishImageLabel: 'Dish Image (Optional)',
     recommendedDishesLabel: 'Recommended Dishes (comma-separated)',
     recommendedDishesPlaceholder: 'e.g., Sashimi, Stew, Stir-fry',
@@ -808,8 +792,6 @@ export const translations = {
     saltiness: 'Saltiness',
     richness: 'Richness',
     aroma: 'Aroma',
-    imageSearchPlaceholder: 'Search images...',
-    searching: 'Searching...',
 
     // User Registration
     userRegistrationTitle: 'User Registration',
@@ -935,7 +917,6 @@ export const translations = {
     repeatRatingLabel: 'Repeat Rating (1-5)',
     condimentImageLabel: 'Condiment Image (Required)',
     uploadImage: 'Upload Image',
-    searchImage: 'Search Image',
     dishImageLabel: 'Dish Image (Optional)',
     recommendedDishesLabel: 'Recommended Dishes (comma-separated)',
     recommendedDishesPlaceholder: 'e.g., Sashimi, Stew, Stir-fry',
@@ -947,8 +928,6 @@ export const translations = {
     saltiness: 'Saltiness',
     richness: 'Richness',
     aroma: 'Aroma',
-    imageSearchPlaceholder: 'Search images...',
-    searching: 'Searching...',
 
     // User Registration
     userRegistrationTitle: 'User Registration',

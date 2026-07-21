@@ -86,15 +86,6 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
       return { name, category: found.category };
     });
   }, [condiments]);
-  const [showImageSearch, setShowImageSearch] = useState(false);
-  const [showDishImageSearch, setShowDishImageSearch] = useState(false);
-  const [imageSearchQuery, setImageSearchQuery] = useState('');
-  const [dishImageSearchQuery, setDishImageSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Array<{ url: string; description: string }>>([]);
-  const [dishSearchResults, setDishSearchResults] = useState<Array<{ url: string; description: string }>>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [isDishSearching, setIsDishSearching] = useState(false);
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // 「＋」ボタンを押さずに入力途中の料理があれば取り込む
@@ -139,66 +130,6 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
       setPairingCondiments(prev => [...prev, v]);
       setNewPairing('');
     }
-  };
-
-  const handleImageSearch = async () => {
-    if (!imageSearchQuery.trim()) return;
-
-    setIsSearching(true);
-    try {
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(imageSearchQuery)}&per_page=6&client_id=YOUR_UNSPLASH_ACCESS_KEY`
-      );
-      const data = await response.json();
-      setSearchResults(
-        data.results?.map((photo: any) => ({
-          url: photo.urls.regular,
-          description: photo.alt_description || photo.description || ''
-        })) || []
-      );
-    } catch (error) {
-      console.error('画像検索エラー:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
-  const selectImage = (url: string) => {
-    setFormData({ ...formData, imageUrl: url });
-    setShowImageSearch(false);
-    setSearchResults([]);
-    setImageSearchQuery('');
-  };
-
-  const handleDishImageSearch = async () => {
-    if (!dishImageSearchQuery.trim()) return;
-
-    setIsDishSearching(true);
-    try {
-      const response = await fetch(
-        `https://api.unsplash.com/search/photos?query=${encodeURIComponent(dishImageSearchQuery)}&per_page=6&client_id=YOUR_UNSPLASH_ACCESS_KEY`
-      );
-      const data = await response.json();
-      setDishSearchResults(
-        data.results?.map((photo: any) => ({
-          url: photo.urls.regular,
-          description: photo.alt_description || photo.description || ''
-        })) || []
-      );
-    } catch (error) {
-      console.error('画像検索エラー:', error);
-      setDishSearchResults([]);
-    } finally {
-      setIsDishSearching(false);
-    }
-  };
-
-  const selectDishImage = (url: string) => {
-    setFormData({ ...formData, dishImageUrl: url });
-    setShowDishImageSearch(false);
-    setDishSearchResults([]);
-    setDishImageSearchQuery('');
   };
 
   const handleImageFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -655,100 +586,18 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               </div>
             )}
 
-            {!showImageSearch ? (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <label className="flex-1 cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageFileUpload}
-                      className="hidden"
-                    />
-                    <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                      {uploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
-                      {uploadingImage ? 'アップロード中...' : t(language, 'uploadImage')}
-                    </div>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowImageSearch(true)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-                  >
-                    <Search size={16} />
-                    {t(language, 'searchImage')}
-                  </button>
-                </div>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={language === 'ja' ? 'または画像URLを入力' : 'Or enter image URL'}
-                />
+            <label className="cursor-pointer block">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileUpload}
+                className="hidden"
+              />
+              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                {uploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
+                {uploadingImage ? 'アップロード中...' : t(language, 'uploadImage')}
               </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={imageSearchQuery}
-                    onChange={(e) => setImageSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleImageSearch())}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t(language, 'imageSearchPlaceholder')}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleImageSearch}
-                    disabled={isSearching}
-                    className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
-                  >
-                    <Search size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowImageSearch(false);
-                      setSearchResults([]);
-                      setImageSearchQuery('');
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-
-                {isSearching && (
-                  <p className="text-sm text-gray-500 text-center py-4">{t(language, 'searching')}</p>
-                )}
-
-                {!isSearching && searchResults.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                    {searchResults.map((result, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => selectImage(result.url)}
-                        className="aspect-square overflow-hidden rounded border-2 border-gray-200 hover:border-blue-500 transition-colors"
-                      >
-                        <img
-                          src={result.url}
-                          alt={result.description}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {!isSearching && searchResults.length === 0 && imageSearchQuery && (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    {language === 'ja' ? '画像が見つかりませんでした' : 'No images found'}
-                  </p>
-                )}
-              </div>
-            )}
+            </label>
           </div>
 
           <div>
@@ -770,100 +619,18 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               </div>
             )}
 
-            {!showDishImageSearch ? (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <label className="flex-1 cursor-pointer">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleDishImageFileUpload}
-                      className="hidden"
-                    />
-                    <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
-                      <Image size={16} />
-                      {t(language, 'uploadImage')}
-                    </div>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowDishImageSearch(true)}
-                    className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
-                  >
-                    <Search size={16} />
-                    {t(language, 'searchImage')}
-                  </button>
-                </div>
-                <input
-                  type="url"
-                  value={formData.dishImageUrl}
-                  onChange={(e) => setFormData({ ...formData, dishImageUrl: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder={language === 'ja' ? 'または画像URLを入力（任意）' : 'Or enter image URL (optional)'}
-                />
+            <label className="cursor-pointer block">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleDishImageFileUpload}
+                className="hidden"
+              />
+              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                <Image size={16} />
+                {t(language, 'uploadImage')}
               </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={dishImageSearchQuery}
-                    onChange={(e) => setDishImageSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleDishImageSearch())}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder={t(language, 'imageSearchPlaceholder')}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleDishImageSearch}
-                    disabled={isDishSearching}
-                    className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-300"
-                  >
-                    <Search size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowDishImageSearch(false);
-                      setDishSearchResults([]);
-                      setDishImageSearchQuery('');
-                    }}
-                    className="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-
-                {isDishSearching && (
-                  <p className="text-sm text-gray-500 text-center py-4">{t(language, 'searching')}</p>
-                )}
-
-                {!isDishSearching && dishSearchResults.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                    {dishSearchResults.map((result, index) => (
-                      <button
-                        key={index}
-                        type="button"
-                        onClick={() => selectDishImage(result.url)}
-                        className="aspect-square overflow-hidden rounded border-2 border-gray-200 hover:border-blue-500 transition-colors"
-                      >
-                        <img
-                          src={result.url}
-                          alt={result.description}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {!isDishSearching && dishSearchResults.length === 0 && dishImageSearchQuery && (
-                  <p className="text-sm text-gray-500 text-center py-4">
-                    {language === 'ja' ? '画像が見つかりませんでした' : 'No images found'}
-                  </p>
-                )}
-              </div>
-            )}
+            </label>
           </div>
 
           <div className="flex gap-3 pt-4">
