@@ -50,9 +50,9 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
   const userByLikes = [...userList].sort((a, b) => b.totalLikes - a.totalLikes);
 
   const tabs: { key: Tab; label: string; icon: JSX.Element }[] = [
-    { key: 'condiment', label: language === 'ja' ? '調味料いいね' : 'Condiment Likes', icon: <Heart size={14} /> },
-    { key: 'user_posts', label: language === 'ja' ? '投稿数' : 'Post Count', icon: <FileText size={14} /> },
-    { key: 'user_likes', label: language === 'ja' ? 'いいね獲得数' : 'Likes Earned', icon: <Star size={14} /> },
+    { key: 'condiment', label: t(language, 'rankCondimentLikes'), icon: <Heart size={14} /> },
+    { key: 'user_posts', label: t(language, 'postCountLabel'), icon: <FileText size={14} /> },
+    { key: 'user_likes', label: t(language, 'likesEarned'), icon: <Star size={14} /> },
   ];
 
   return (
@@ -64,10 +64,10 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
         </div>
         <div>
           <h2 className="text-base font-bold text-[#3d1f00]">
-            {language === 'ja' ? 'ランキング' : 'Ranking'}
+            {t(language, 'ranking')}
           </h2>
           <p className="text-xs text-[#a07850]">
-            {language === 'ja' ? 'みんなの調味料・投稿者の活躍' : 'Top condiments & contributors'}
+            {t(language, 'rankingSubtitle')}
           </p>
         </div>
       </div>
@@ -93,7 +93,7 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
       {loading ? (
         <div className="text-center py-16 text-[#a07850]">
           <Trophy size={32} className="mx-auto mb-3 opacity-30" />
-          <p className="text-sm">{language === 'ja' ? '読み込み中...' : 'Loading...'}</p>
+          <p className="text-sm">{t(language, 'loading')}</p>
         </div>
       ) : (
         <>
@@ -101,7 +101,7 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
           {activeTab === 'condiment' && (
             <div className="space-y-3">
               {condimentRanked.length === 0 ? (
-                <p className="text-center text-sm text-[#a07850] py-12">{language === 'ja' ? 'まだデータがありません' : 'No data yet'}</p>
+                <p className="text-center text-sm text-[#a07850] py-12">{t(language, 'noData')}</p>
               ) : condimentRanked.map(({ agg, totalLikes }, i) => {
                 const latestPost = agg.posts[0];
                 const isLiked = likedCondiments.includes(latestPost.id);
@@ -155,7 +155,7 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
           {activeTab === 'user_posts' && (
             <div className="space-y-3">
               {userByPosts.length === 0 ? (
-                <p className="text-center text-sm text-[#a07850] py-12">{language === 'ja' ? 'まだデータがありません' : 'No data yet'}</p>
+                <p className="text-center text-sm text-[#a07850] py-12">{t(language, 'noData')}</p>
               ) : userByPosts.map((u, i) => (
                 <div
                   key={u.uid}
@@ -176,7 +176,7 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm text-[#2c1a06] truncate">{u.nickname}</p>
-                    <p className="text-xs text-[#a07850]">{language === 'ja' ? `${u.postCount}件投稿` : `${u.postCount} posts`}</p>
+                    <p className="text-xs text-[#a07850]">{t(language, 'postsCountText', { count: u.postCount })}</p>
                   </div>
                   <div className="flex-shrink-0 flex flex-col items-center gap-0.5 text-[#7c4a1e]">
                     <FileText size={16} />
@@ -191,7 +191,7 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
           {activeTab === 'user_likes' && (
             <div className="space-y-3">
               {userByLikes.length === 0 ? (
-                <p className="text-center text-sm text-[#a07850] py-12">{language === 'ja' ? 'まだデータがありません' : 'No data yet'}</p>
+                <p className="text-center text-sm text-[#a07850] py-12">{t(language, 'noData')}</p>
               ) : userByLikes.map((u, i) => (
                 <div
                   key={u.uid}
@@ -212,7 +212,7 @@ export function RankingPage({ aggregatedCondiments, condiments, language, onView
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm text-[#2c1a06] truncate">{u.nickname}</p>
-                    <p className="text-xs text-[#a07850]">{language === 'ja' ? `${u.postCount}件投稿・いいね${u.totalLikes}` : `${u.postCount} posts · ${u.totalLikes} likes`}</p>
+                    <p className="text-xs text-[#a07850]">{t(language, 'postsLikesText', { count: u.postCount, likes: u.totalLikes })}</p>
                   </div>
                   <div className="flex-shrink-0 flex flex-col items-center gap-0.5 text-red-400">
                     <Heart size={16} />

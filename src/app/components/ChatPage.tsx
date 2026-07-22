@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User as UserIcon, Sparkles, ExternalLink, AlertCircle } from 'lucide-react';
 import { Condiment } from '../types';
-import { Language } from '../i18n/translations';
+import { Language, t } from '../i18n/translations';
 
 interface ChatPageProps {
   onClose: () => void;
@@ -192,9 +192,7 @@ function findRelatedCondiments(responseText: string, condiments: Condiment[]): C
 export function ChatPage({ onClose, language, condiments, onViewCondiment }: ChatPageProps) {
   const [messages, setMessages] = useState<Message[]>([{
     id: '0',
-    text: language === 'ja'
-      ? 'こんにちは！「世界のひとさじ」専門AIアシスタントです🌏\n\nサイト掲載の調味料について詳しくお答えし、関連ページへご案内します。調味料全般についても何でも聞いてください！'
-      : 'Hi! I\'m the AI assistant for "A Spoonful of the World" 🌏\n\nAsk me anything about condiments on the site or condiments in general!',
+    text: t(language, 'chatGreeting'),
     sender: 'bot',
     timestamp: new Date(),
   }]);
@@ -236,9 +234,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
       const msg = e instanceof Error ? e.message : String(e);
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
-        text: language === 'ja'
-          ? `エラーが発生しました: ${msg}\n\nAPIキーを確認してください。`
-          : `Error: ${msg}\n\nPlease check your API key.`,
+        text: t(language, 'chatError', { msg }),
         sender: 'bot',
         timestamp: new Date(),
         error: true,
@@ -265,7 +261,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">
-                {language === 'ja' ? '調味料AIアシスタント' : 'Condiment AI Assistant'}
+                {t(language, 'aiAssistantTitle')}
               </h2>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-[#c17f3a] rounded-full animate-pulse" />
@@ -283,9 +279,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-2 flex items-center gap-2 flex-shrink-0">
             <AlertCircle size={14} className="text-amber-600 flex-shrink-0" />
             <p className="text-xs text-amber-700">
-              {language === 'ja'
-                ? '.env に VITE_GEMINI_API_KEY を設定してください'
-                : 'Set VITE_GEMINI_API_KEY in .env to enable AI'}
+              {t(language, 'chatNoApiKey')}
             </p>
           </div>
         )}
@@ -319,7 +313,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
                   {message.relatedCondiments && message.relatedCondiments.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs font-bold text-[#c17f3a] mb-1.5">
-                        📚 {language === 'ja' ? 'サイトの調味料ページへ' : 'View on site'}
+                        📚 {t(language, 'viewOnSite')}
                       </p>
                       {message.relatedCondiments.map(condiment => (
                         <div
@@ -397,7 +391,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
               onChange={(e) => setInputText(e.target.value)}
               onKeyPress={handleKeyPress}
               disabled={isTyping}
-              placeholder={language === 'ja' ? '調味料について質問してください...' : 'Ask about condiments...'}
+              placeholder={t(language, 'chatPlaceholder')}
               className="flex-1 px-3.5 py-2.5 border border-[#e2d5c0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white text-[#3d1f00] text-sm placeholder-[#a07850] disabled:opacity-60"
             />
             <button

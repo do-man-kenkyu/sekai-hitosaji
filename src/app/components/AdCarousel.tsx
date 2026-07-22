@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
-import { Language } from '../i18n/translations';
+import { Language, t } from '../i18n/translations';
 import { withBase } from '../assetPath';
 
 interface Ad {
@@ -68,7 +68,7 @@ export function AdCarousel({ language }: AdCarouselProps) {
     <div className="mb-6">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[10px] font-bold text-[#a07850] tracking-widest uppercase">
-          {language === 'ja' ? 'スポンサー' : 'Sponsored'}
+          {t(language, 'sponsored')}
         </span>
         <div className="flex-1 h-px bg-[#e2d5c0]" />
       </div>
@@ -98,7 +98,7 @@ export function AdCarousel({ language }: AdCarouselProps) {
               </h3>
               <p className="text-white/70 text-xs line-clamp-2">{ad.description}</p>
               <span className="inline-flex items-center gap-1 text-[#e8d5b0] text-[10px] mt-1.5 group-hover:text-white transition-colors">
-                {language === 'ja' ? '詳しく見る' : 'Learn more'}
+                {t(language, 'learnMore')}
                 <ExternalLink size={10} />
               </span>
             </div>

@@ -56,7 +56,7 @@ export function CondimentCard({ aggregated, onViewReviews, language, onToggleLik
             ))}
           </div>
           <span className="text-xs text-[#7c4a1e] font-medium">{aggregated.averageRepeatRating.toFixed(1)}</span>
-          <span className="text-[10px] text-[#a07850]">({aggregated.postCount}{language === 'ja' ? '件' : ''})</span>
+          <span className="text-[10px] text-[#a07850]">({aggregated.postCount}{t(language, 'countUnit')})</span>
         </div>
 
         {/* Description */}
@@ -71,7 +71,7 @@ export function CondimentCard({ aggregated, onViewReviews, language, onToggleLik
         {/* Dishes */}
         {latestPost.recommendedDishes.length > 0 && (
           <div className="mb-2 p-2 bg-[#fdf5ea] rounded-lg border border-[#e8d5b0]">
-            <p className="text-xs font-bold text-[#c17f3a] uppercase tracking-wide mb-1">{language === 'ja' ? 'おすすめ料理' : 'Best with'}</p>
+            <p className="text-xs font-bold text-[#c17f3a] uppercase tracking-wide mb-1">{t(language, 'bestWith')}</p>
             <div className="flex flex-wrap gap-1">
               {latestPost.recommendedDishes.slice(0, 3).map((dish, index) => (
                 <span key={index} className="px-2 py-0.5 bg-white border border-[#e2d5c0] text-[#5c3311] text-xs rounded font-medium">
@@ -92,7 +92,7 @@ export function CondimentCard({ aggregated, onViewReviews, language, onToggleLik
             className={`p-1.5 rounded-lg transition-colors ${
               isLiked ? 'bg-red-50 text-red-500' : 'bg-[#f5ede0] text-[#a07850] hover:bg-red-50 hover:text-red-400'
             }`}
-            title={language === 'ja' ? 'いいね' : 'Like'}
+            title={t(language, 'like')}
           >
             <Heart size={14} className={isLiked ? 'fill-red-500' : ''} />
           </button>
@@ -101,7 +101,7 @@ export function CondimentCard({ aggregated, onViewReviews, language, onToggleLik
             className={`p-1.5 rounded-lg transition-colors ${
               isBookmarked ? 'bg-amber-50 text-amber-600' : 'bg-[#f5ede0] text-[#a07850] hover:bg-amber-50 hover:text-amber-500'
             }`}
-            title={language === 'ja' ? 'ブックマーク' : 'Bookmark'}
+            title={t(language, 'bookmark')}
           >
             <Bookmark size={14} className={isBookmarked ? 'fill-amber-600' : ''} />
           </button>
@@ -110,7 +110,7 @@ export function CondimentCard({ aggregated, onViewReviews, language, onToggleLik
             className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-[#3d1f00] text-[#e8d5b0] text-xs rounded-lg hover:bg-[#2a1200] transition-colors"
           >
             <Eye size={13} />
-            {language === 'ja' ? '詳細を見る' : 'View Details'}
+            {t(language, 'viewDetails')}
           </button>
         </div>
       </div>

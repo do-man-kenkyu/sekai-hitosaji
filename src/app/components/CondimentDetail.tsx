@@ -24,13 +24,13 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
   const locale = language === 'ja' ? 'ja-JP' : 'en-US';
 
   const tasteLabels: Record<string, string> = {
-    sweetness: language === 'ja' ? '甘味' : 'Sweet',
-    sourness: language === 'ja' ? '酸味' : 'Sour',
-    bitterness: language === 'ja' ? '苦味' : 'Bitter',
-    umami: language === 'ja' ? '旨味' : 'Umami',
-    saltiness: language === 'ja' ? '塩味' : 'Salty',
-    richness: language === 'ja' ? '濃厚さ' : 'Rich',
-    aroma: language === 'ja' ? '香り' : 'Aroma',
+    sweetness: t(language, 'sweetness'),
+    sourness: t(language, 'sourness'),
+    bitterness: t(language, 'bitterness'),
+    umami: t(language, 'umami'),
+    saltiness: t(language, 'saltiness'),
+    richness: t(language, 'richness'),
+    aroma: t(language, 'aroma'),
   };
 
   const topTastes = Object.entries(condiment.tasteProfile)
@@ -65,7 +65,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
             className="flex items-center gap-1 text-white/80 hover:text-white bg-black/20 rounded-full px-3 py-1.5 text-sm backdrop-blur-sm"
           >
             <ChevronLeft size={16} />
-            {language === 'ja' ? '戻る' : 'Back'}
+            {t(language, 'back')}
           </button>
           <div className="flex items-center gap-2">
             <button
@@ -112,7 +112,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
                 ))}
               </div>
               <span className="text-lg font-bold text-white">{condiment.repeatRating.toFixed(1)}</span>
-              <span className="text-[9px] text-[#e8d5b0]">{language === 'ja' ? 'リピート度' : 'Rating'}</span>
+              <span className="text-[9px] text-[#e8d5b0]">{t(language, 'ratingShort')}</span>
             </div>
           </div>
         </div>
@@ -168,7 +168,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
               <div className="px-4 py-2 border-b border-[#e2d5c0] bg-[#faf7f2] flex items-center gap-2">
                 <Sparkles size={13} className="text-[#c17f3a]" />
                 <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">
-                  {language === 'ja' ? '相性のよい調味料' : 'Pairs Well With'}
+                  {t(language, 'pairsWellWith')}
                 </span>
               </div>
               <div className="px-4 py-3 flex flex-wrap gap-2">
@@ -221,7 +221,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
           {condiment.dishImageUrl && (
             <div className="bg-white rounded-2xl border border-[#e2d5c0] overflow-hidden">
               <div className="px-4 py-2 border-b border-[#e2d5c0] bg-[#faf7f2]">
-                <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">{language === 'ja' ? '料理の写真' : 'Dish Photo'}</span>
+                <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">{t(language, 'dishPhoto')}</span>
               </div>
               <div className="aspect-video">
                 <img src={condiment.dishImageUrl} alt="dish" className="w-full h-full object-cover" />

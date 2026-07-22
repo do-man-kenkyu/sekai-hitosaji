@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Condiment } from '../types';
-import { Language } from '../i18n/translations';
+import { Language, t } from '../i18n/translations';
 
 // 都道府県庁所在地のおおよその緯度経度
 const PREFECTURE_COORDS: Record<string, [number, number]> = {
@@ -79,7 +79,7 @@ export function CondimentMap({ condiments, language, onSelectCondiment }: Props)
     const HomeControl = L.Control.extend({
       onAdd: () => {
         const btn = L.DomUtil.create('button', 'leaflet-bar');
-        btn.innerHTML = language === 'ja' ? '🇯🇵 日本' : '🇯🇵 Japan';
+        btn.innerHTML = t(language, 'japanBtn');
         btn.style.cssText = 'padding:4px 10px;background:#fff;cursor:pointer;font-size:12px;border:none;';
         btn.onclick = () => map.setView(JAPAN_CENTER, JAPAN_ZOOM);
         return btn;
@@ -141,7 +141,7 @@ export function CondimentMap({ condiments, language, onSelectCondiment }: Props)
 
       const heading = L.DomUtil.create('div', '', container);
       heading.style.cssText = 'font-weight:bold; color:#3d1f00; margin-bottom:6px;';
-      heading.textContent = `${origin}（${uniqueCondiments.length}${language === 'ja' ? '種類' : ''}）`;
+      heading.textContent = t(language, 'regionTypes', { origin, count: uniqueCondiments.length });
 
       const listEl = L.DomUtil.create('div', '', container);
       listEl.style.cssText = 'display:flex; flex-direction:column; gap:4px;';

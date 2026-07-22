@@ -125,10 +125,10 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
             </div>
             <div>
               <h2 className="text-sm font-bold text-white">
-                {language === 'ja' ? '調味料コンビネーション' : 'Condiment Combinator'}
+                {t(language, 'combinatorTitle')}
               </h2>
               <p className="text-[10px] text-[#e8d5b0]">
-                {language === 'ja' ? '2つ組み合わせて新しいソースを作ろう' : 'Combine two to create something new'}
+                {t(language, 'combinatorSubtitle')}
               </p>
             </div>
           </div>
@@ -144,21 +144,21 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
           <div className="bg-white rounded-2xl border border-[#e2d5c0] overflow-hidden">
             <div className="px-4 py-2.5 border-b border-[#e2d5c0] bg-[#faf7f2]">
               <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">
-                {language === 'ja' ? '調味料を選ぶ' : 'Select Condiments'}
+                {t(language, 'selectCondiments')}
               </span>
             </div>
             <div className="p-4">
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <label className="block text-[10px] font-bold text-[#a07850] mb-1.5 uppercase tracking-wide">
-                    {language === 'ja' ? '調味料①' : 'Condiment A'}
+                    {t(language, 'condimentA')}
                   </label>
                   <select
                     value={condimentA}
                     onChange={e => { setCondimentA(e.target.value); setSearched(false); }}
                     className="w-full px-3 py-2.5 rounded-xl border border-[#e2d5c0] bg-[#faf7f2] text-[#3d1f00] text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
                   >
-                    <option value="">{language === 'ja' ? '選択...' : 'Select...'}</option>
+                    <option value="">{t(language, 'selectEllipsis')}</option>
                     {optionsA.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
@@ -171,14 +171,14 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
 
                 <div className="flex-1">
                   <label className="block text-[10px] font-bold text-[#a07850] mb-1.5 uppercase tracking-wide">
-                    {language === 'ja' ? '調味料②' : 'Condiment B'}
+                    {t(language, 'condimentB')}
                   </label>
                   <select
                     value={condimentB}
                     onChange={e => { setCondimentB(e.target.value); setSearched(false); }}
                     className="w-full px-3 py-2.5 rounded-xl border border-[#e2d5c0] bg-[#faf7f2] text-[#3d1f00] text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
                   >
-                    <option value="">{language === 'ja' ? '選択...' : 'Select...'}</option>
+                    <option value="">{t(language, 'selectEllipsis')}</option>
                     {optionsB.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
@@ -190,7 +190,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
                 className="w-full mt-4 py-3 bg-[#7c4a1e] text-white rounded-xl font-medium hover:bg-[#3d1f00] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
               >
                 <Sparkles size={16} />
-                {language === 'ja' ? '組み合わせる' : 'Combine'}
+                {t(language, 'combineAction')}
               </button>
             </div>
           </div>
@@ -200,7 +200,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
             <div className="bg-white rounded-2xl border border-[#e2d5c0] overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e2d5c0] bg-[#faf7f2]">
                 <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">
-                  💡 {language === 'ja' ? `「${condimentA || condimentB}」との組み合わせ候補` : 'Suggested combinations'}
+                  💡 {t(language, 'suggestedCombos', { name: condimentA || condimentB })}
                 </span>
               </div>
               <div className="divide-y divide-[#f0e8de]">
@@ -249,7 +249,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
                 <p className="text-sm text-[#5c3d20] leading-relaxed">{result.description}</p>
                 <div>
                   <p className="text-[10px] font-bold text-[#7c4a1e] uppercase tracking-wide mb-2">
-                    {language === 'ja' ? '🍽 こんな料理に' : '🍽 Great for'}
+                    {t(language, 'greatFor')}
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {result.uses.map((use, i) => (
@@ -261,7 +261,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
                 </div>
                 {result.tips && (
                   <div className="bg-[#fdf5ea] border border-[#e8d5b0] rounded-xl p-3">
-                    <p className="text-[10px] font-bold text-[#c17f3a] mb-1">💡 {language === 'ja' ? 'コツ・ポイント' : 'Tips'}</p>
+                    <p className="text-[10px] font-bold text-[#c17f3a] mb-1">💡 {t(language, 'tips')}</p>
                     <p className="text-xs text-[#5c3d20]">{result.tips}</p>
                   </div>
                 )}
@@ -274,10 +274,10 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
             <div className="bg-white rounded-2xl border border-[#e2d5c0] p-6 text-center">
               <p className="text-4xl mb-3">🤔</p>
               <p className="font-bold text-[#3d1f00] mb-1">
-                {language === 'ja' ? 'この組み合わせはまだ未登録です' : 'Combination not found yet'}
+                {t(language, 'comboNotFound')}
               </p>
               <p className="text-sm text-[#a07850]">
-                {language === 'ja' ? '試してみると意外な発見があるかも！' : 'It might be worth trying anyway!'}
+                {t(language, 'comboTryAnyway')}
               </p>
             </div>
           )}
@@ -287,7 +287,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
             <div className="bg-white rounded-2xl border border-[#e2d5c0] overflow-hidden">
               <div className="px-4 py-2.5 border-b border-[#e2d5c0] bg-[#faf7f2]">
                 <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">
-                  📖 {language === 'ja' ? '登録済みの組み合わせ' : 'Registered Combinations'}
+                  📖 {t(language, 'registeredCombos')}
                 </span>
               </div>
               <div className="divide-y divide-[#f0e8de]">
@@ -320,7 +320,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-[#e2d5c0] text-[#7c4a1e] rounded-xl hover:bg-[#fdf5ea] transition-colors text-sm font-medium"
             >
               <RefreshCw size={15} />
-              {language === 'ja' ? '別の組み合わせを試す' : 'Try another combination'}
+              {t(language, 'tryAnother')}
             </button>
           </div>
         )}

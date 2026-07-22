@@ -1,5 +1,5 @@
 import { X, Check } from 'lucide-react';
-import { Language } from '../i18n/translations';
+import { Language, t } from '../i18n/translations';
 
 interface ShareModalProps {
   condimentName: string;
@@ -32,7 +32,7 @@ export function ShareModal({ condimentName, language, onClose }: ShareModalProps
               <Check size={18} className="text-white" />
             </div>
             <h2 className="text-sm font-bold text-white">
-              {language === 'ja' ? '投稿が完了しました！' : 'Posted successfully!'}
+              {t(language, 'postedSuccess')}
             </h2>
           </div>
           <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10">
@@ -46,9 +46,7 @@ export function ShareModal({ condimentName, language, onClose }: ShareModalProps
             「{condimentName}」
           </p>
           <p className="text-sm text-[#7c4a1e] mb-5">
-            {language === 'ja'
-              ? 'SNSにシェアして、みんなに紹介しませんか？'
-              : 'Would you like to share it on social media?'}
+            {t(language, 'shareSnsPrompt')}
           </p>
 
           <div className="space-y-2.5">
@@ -58,7 +56,7 @@ export function ShareModal({ condimentName, language, onClose }: ShareModalProps
               className="w-full flex items-center gap-3 px-4 py-3 bg-black text-white rounded-xl hover:opacity-90 transition-opacity"
             >
               <span className="text-lg font-bold w-6 text-center">𝕏</span>
-              <span className="text-sm font-medium">{language === 'ja' ? 'X（Twitter）でシェア' : 'Share on X (Twitter)'}</span>
+              <span className="text-sm font-medium">{t(language, 'shareX')}</span>
             </button>
 
             {/* Facebook */}
@@ -67,7 +65,7 @@ export function ShareModal({ condimentName, language, onClose }: ShareModalProps
               className="w-full flex items-center gap-3 px-4 py-3 bg-[#1877f2] text-white rounded-xl hover:opacity-90 transition-opacity"
             >
               <span className="text-lg font-bold w-6 text-center">f</span>
-              <span className="text-sm font-medium">{language === 'ja' ? 'Facebookでシェア' : 'Share on Facebook'}</span>
+              <span className="text-sm font-medium">{t(language, 'shareFacebook')}</span>
             </button>
 
             {/* LINE */}
@@ -76,7 +74,7 @@ export function ShareModal({ condimentName, language, onClose }: ShareModalProps
               className="w-full flex items-center gap-3 px-4 py-3 bg-[#06c755] text-white rounded-xl hover:opacity-90 transition-opacity"
             >
               <span className="text-lg font-bold w-6 text-center">L</span>
-              <span className="text-sm font-medium">{language === 'ja' ? 'LINEでシェア' : 'Share on LINE'}</span>
+              <span className="text-sm font-medium">{t(language, 'shareLine')}</span>
             </button>
           </div>
 
@@ -84,7 +82,7 @@ export function ShareModal({ condimentName, language, onClose }: ShareModalProps
             onClick={onClose}
             className="w-full mt-4 px-4 py-2.5 text-[#a07850] hover:text-[#3d1f00] text-sm border border-[#e2d5c0] rounded-xl hover:bg-[#f5ede0] transition-colors"
           >
-            {language === 'ja' ? 'シェアせずに閉じる' : 'Close without sharing'}
+            {t(language, 'closeWithoutSharing')}
           </button>
         </div>
       </div>

@@ -36,7 +36,7 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language }: 
             className="flex items-center gap-1 text-white/80 hover:text-white bg-black/20 rounded-full px-3 py-1.5 text-sm backdrop-blur-sm"
           >
             <ChevronLeft size={16} />
-            {language === 'ja' ? '戻る' : 'Back'}
+            {t(language, 'back')}
           </button>
         </div>
 
@@ -161,7 +161,7 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language }: 
                         <div className="flex items-center gap-1.5 mb-2">
                           <Utensils size={11} className="text-[#c17f3a]" />
                           <span className="text-[10px] font-bold text-[#c17f3a] uppercase tracking-wide">
-                            {language === 'ja' ? 'おすすめ料理' : 'Best with'}
+                            {t(language, 'bestWith')}
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5">
