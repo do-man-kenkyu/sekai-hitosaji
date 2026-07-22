@@ -864,7 +864,7 @@ export default function App() {
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-[#7c4a1e] hover:bg-[#f5ede0] transition-colors"
             >
               {showNavMenu ? <XIcon size={20} /> : <Menu size={20} />}
-              <span className="text-sm font-medium">{language === 'ja' ? 'メニュー' : 'Menu'}</span>
+              <span className="text-sm font-medium">{t(language, 'menu')}</span>
             </button>
             {activeTab !== 'home' && (
               <button
@@ -872,7 +872,7 @@ export default function App() {
                 className="flex items-center gap-1 px-3 py-2 rounded-lg text-[#7c4a1e] hover:bg-[#f5ede0] transition-colors text-sm"
               >
                 <ChevronLeft size={16} />
-                {language === 'ja' ? 'ホームに戻る' : 'Back to Home'}
+                {t(language, 'backToHome')}
               </button>
             )}
           </div>
@@ -886,13 +886,13 @@ export default function App() {
                   className="flex items-center gap-2 px-4 py-2 bg-[#ede4d3] text-[#3d1f00] rounded-lg hover:bg-[#e2d5c0] transition-colors text-sm whitespace-nowrap flex-shrink-0"
                 >
                   <UserIcon size={16} />
-                  {language === 'ja' ? 'マイページ' : 'My Page'}
+                  {t(language, 'myPage')}
                 </button>
                 <button
                   onClick={() => { signOut(); }}
                   className="flex items-center gap-1 px-3 py-2 text-[#a07850] hover:text-[#3d1f00] text-xs border border-[#e2d5c0] rounded-lg whitespace-nowrap flex-shrink-0"
                 >
-                  {language === 'ja' ? 'ログアウト' : 'Sign out'}
+                  {t(language, 'signOut')}
                 </button>
               </>
             ) : (
@@ -901,7 +901,7 @@ export default function App() {
                 className="flex items-center gap-2 px-4 py-2 bg-[#ede4d3] text-[#3d1f00] rounded-lg hover:bg-[#e2d5c0] transition-colors text-sm whitespace-nowrap flex-shrink-0"
               >
                 <UserIcon size={16} />
-                {language === 'ja' ? 'ログイン' : 'Sign In'}
+                {t(language, 'signIn')}
               </button>
             )}
             <button
@@ -909,7 +909,7 @@ export default function App() {
               className="flex items-center gap-2 px-4 py-2 bg-[#7c4a1e] text-white rounded-lg hover:bg-[#3d1f00] transition-colors text-sm ml-2 whitespace-nowrap flex-shrink-0"
             >
               <Plus size={16} />
-              {language === 'ja' ? '投稿する' : 'Post'}
+              {t(language, 'post')}
             </button>
           </div>
         </div>
@@ -918,9 +918,9 @@ export default function App() {
           <div className="border-t border-[#e2d5c0] bg-white shadow-lg absolute left-0 right-0 z-40">
             <div className="max-w-7xl mx-auto px-8 py-3 flex flex-wrap items-center gap-1">
               {[
-                { tab: 'home' as const, icon: <Home size={16} />, label: language === 'ja' ? 'ホーム' : 'Home' },
-                { tab: 'search' as const, icon: <Grid size={16} />, label: language === 'ja' ? '調味料一覧' : 'Browse' },
-                { tab: 'trends' as const, icon: <TrendingUp size={16} />, label: language === 'ja' ? 'トレンド' : 'Trends' },
+                { tab: 'home' as const, icon: <Home size={16} />, label: t(language, 'home') },
+                { tab: 'search' as const, icon: <Grid size={16} />, label: t(language, 'browse') },
+                { tab: 'trends' as const, icon: <TrendingUp size={16} />, label: t(language, 'trends') },
               ].map(({ tab, icon, label }) => (
                 <button
                   key={tab}
@@ -936,14 +936,14 @@ export default function App() {
                 className="flex items-center gap-2 px-5 py-3 rounded-xl text-[#a07850] hover:bg-[#fdf5ea] hover:text-[#3d1f00] transition-colors"
               >
                 <MessageCircle size={16} />
-                <span className="text-sm">{language === 'ja' ? 'AIチャット' : 'AI Chat'}</span>
+                <span className="text-sm">{t(language, 'aiChat')}</span>
               </button>
               <button
                 onClick={() => { setShowCombination(true); setShowNavMenu(false); }}
                 className="flex items-center gap-2 px-5 py-3 rounded-xl text-[#a07850] hover:bg-[#fdf5ea] hover:text-[#3d1f00] transition-colors"
               >
                 <Sparkles size={16} />
-                <span className="text-sm">{language === 'ja' ? '組み合わせ' : 'Combine'}</span>
+                <span className="text-sm">{t(language, 'combine')}</span>
               </button>
               <button
                 onClick={() => { setShowContact(true); setShowNavMenu(false); }}
@@ -957,14 +957,14 @@ export default function App() {
                 className="flex items-center gap-2 px-5 py-3 rounded-xl text-[#a07850] hover:bg-[#fdf5ea] hover:text-[#3d1f00] transition-colors"
               >
                 <ScrollText size={16} />
-                <span className="text-sm">{language === 'ja' ? '利用規約' : 'Terms'}</span>
+                <span className="text-sm">{t(language, 'terms')}</span>
               </button>
               <button
                 onClick={() => { setShowLegal('privacy'); setShowNavMenu(false); }}
                 className="flex items-center gap-2 px-5 py-3 rounded-xl text-[#a07850] hover:bg-[#fdf5ea] hover:text-[#3d1f00] transition-colors"
               >
                 <ShieldCheck size={16} />
-                <span className="text-sm">{language === 'ja' ? 'プライバシー' : 'Privacy'}</span>
+                <span className="text-sm">{t(language, 'privacy')}</span>
               </button>
             </div>
           </div>
@@ -985,13 +985,13 @@ export default function App() {
               <div className="absolute inset-0 flex flex-col justify-end px-5 pb-5 sm:px-8 sm:pb-8">
                 <span className="text-[10px] sm:text-xs text-[#c17f3a] tracking-[3px] uppercase mb-2">Discover · Share · Taste</span>
                 <h2 className="text-xl sm:text-3xl font-bold text-white leading-tight mb-3">
-                  {language === 'ja' ? '世界の調味料を\n知ろう' : 'Discover World\nCondiments'}
+                  {t(language, 'heroTitle')}
                 </h2>
                 <div className="hidden sm:flex relative w-full max-w-lg">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#a07850]" size={18} />
                   <input
                     type="text"
-                    placeholder={language === 'ja' ? '調味料名・説明文で検索...' : 'Search by name or description...'}
+                    placeholder={t(language, 'searchPlaceholderFull')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -1001,7 +1001,7 @@ export default function App() {
                     onClick={handleSearch}
                     className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-[#7c4a1e] text-white text-sm rounded-md hover:bg-[#3d1f00] transition-colors"
                   >
-                    {language === 'ja' ? '検索' : 'Search'}
+                    {t(language, 'searchBtn')}
                   </button>
                 </div>
               </div>
@@ -1014,7 +1014,7 @@ export default function App() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a07850]" size={15} />
                   <input
                     type="text"
-                    placeholder={language === 'ja' ? '調味料名・説明文で検索...' : 'Search by name or description...'}
+                    placeholder={t(language, 'searchPlaceholderFull')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
@@ -1025,12 +1025,12 @@ export default function App() {
                   onClick={handleSearch}
                   className="px-4 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] transition-colors text-sm font-medium"
                 >
-                  {language === 'ja' ? '検索' : 'Search'}
+                  {t(language, 'searchBtn')}
                 </button>
                 <button
                   onClick={() => handleTabChange('ranking')}
                   className="flex items-center gap-1 px-3 py-2.5 bg-[#fdf5ea] border border-[#c17f3a] text-[#7c4a1e] rounded-xl hover:bg-[#f5ede0] transition-colors text-sm font-medium flex-shrink-0"
-                  title={language === 'ja' ? 'ランキング' : 'Ranking'}
+                  title={t(language, 'ranking')}
                 >
                   <Trophy size={15} className="text-[#c17f3a]" />
                 </button>
@@ -1040,7 +1040,7 @@ export default function App() {
                   onClick={handleSearchClear}
                   className="mt-2 text-xs text-[#a07850] hover:text-[#3d1f00]"
                 >
-                  ✕ {language === 'ja' ? `「${committedSearch}」をクリア` : `Clear "${committedSearch}"`}
+                  ✕ {t(language, 'clearSearch', { term: committedSearch })}
                 </button>
               )}
             </div>
@@ -1051,10 +1051,10 @@ export default function App() {
                 <div className="px-4 py-2.5 border-b border-[#e2d5c0] bg-[#faf7f2] flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Trophy size={14} className="text-[#c17f3a]" />
-                    <span className="text-xs font-bold text-[#3d1f00] tracking-wide">{language === 'ja' ? 'いいねランキング TOP3' : 'Top 3 Liked'}</span>
+                    <span className="text-xs font-bold text-[#3d1f00] tracking-wide">{t(language, 'top3Liked')}</span>
                   </div>
                   <button onClick={() => handleTabChange('ranking')} className="text-[10px] text-[#c17f3a] hover:text-[#7c4a1e] font-medium">
-                    {language === 'ja' ? 'もっと見る →' : 'See all →'}
+                    {t(language, 'seeAll')}
                   </button>
                 </div>
                 <div className="divide-y divide-[#f0e8de]">
@@ -1090,7 +1090,7 @@ export default function App() {
             {/* Category Section */}
             <div className="mb-7">
               <div className="flex items-center gap-3 mb-3">
-                <span className="text-sm font-bold text-[#3d1f00] tracking-wide">{language === 'ja' ? 'カテゴリーから探す' : 'Browse by Category'}</span>
+                <span className="text-sm font-bold text-[#3d1f00] tracking-wide">{t(language, 'browseByCategory')}</span>
                 <div className="flex-1 h-px bg-[#e2d5c0]" />
               </div>
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -1113,7 +1113,7 @@ export default function App() {
 
             {/* Section heading */}
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-sm font-bold text-[#3d1f00] tracking-wide">{language === 'ja' ? '最新の調味料' : 'Latest Condiments'}</span>
+              <span className="text-sm font-bold text-[#3d1f00] tracking-wide">{t(language, 'latestCondiments')}</span>
               <div className="flex-1 h-px bg-[#e2d5c0]" />
             </div>
           </div>
@@ -1213,7 +1213,7 @@ export default function App() {
               <div className="absolute top-0 left-0 w-1 h-full bg-[#7c4a1e] rounded-l-2xl" />
               <h3 className="text-sm font-bold text-[#3d1f00] mb-3 flex items-center gap-2 pl-2">
                 <MapPin size={16} className="text-[#c17f3a]" />
-                {language === 'ja' ? '世界の調味料マップ' : 'World Condiments Map'}
+                {t(language, 'worldMap')}
               </h3>
               <div className="aspect-video rounded-lg overflow-hidden relative z-0">
                 <CondimentMap
@@ -1223,7 +1223,7 @@ export default function App() {
                 />
               </div>
               <p className="text-xs text-[#7c4a1e] mt-3 pl-2">
-                {language === 'ja' ? '世界中から集まった調味料の産地を探索しましょう' : 'Explore condiment origins from around the world'}
+                {t(language, 'worldMapDesc')}
               </p>
             </div>
 
@@ -1232,7 +1232,7 @@ export default function App() {
               <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-[#c17f3a]/10 -translate-y-8 translate-x-8" />
               <h3 className="text-sm font-bold text-[#3d1f00] mb-2 flex items-center gap-2">
                 <Users size={16} className="text-[#c17f3a]" />
-                {language === 'ja' ? 'コミュニティへようこそ' : 'Join Our Community'}
+                {t(language, 'joinCommunity')}
               </h3>
               <p className="text-xs text-[#7c4a1e] mb-4">
                 {language === 'ja'
@@ -1242,18 +1242,18 @@ export default function App() {
               <div className="grid grid-cols-2 gap-2 mb-4">
                 <div className="bg-white border border-[#e2d5c0] rounded-xl p-3 text-center">
                   <p className="text-lg font-bold text-[#3d1f00]">{condiments.length}</p>
-                  <p className="text-[10px] text-[#7c4a1e]">{language === 'ja' ? '投稿数' : 'Total Posts'}</p>
+                  <p className="text-[10px] text-[#7c4a1e]">{t(language, 'totalPostsLabel')}</p>
                 </div>
                 <div className="bg-white border border-[#e2d5c0] rounded-xl p-3 text-center">
                   <p className="text-lg font-bold text-[#3d1f00]">{aggregatedCondiments.length}</p>
-                  <p className="text-[10px] text-[#7c4a1e]">{language === 'ja' ? '調味料の種類' : 'Condiment Types'}</p>
+                  <p className="text-[10px] text-[#7c4a1e]">{t(language, 'condimentTypes')}</p>
                 </div>
               </div>
               <button
                 onClick={() => { if (!currentUser) setShowLoginModal(true); else setShowAddForm(true); }}
                 className="w-full py-2.5 bg-[#7c4a1e] text-white rounded-lg hover:bg-[#3d1f00] transition-colors text-sm font-medium"
               >
-                {language === 'ja' ? '今すぐ投稿する' : 'Post Now'}
+                {t(language, 'postNow')}
               </button>
             </div>
           </div>
@@ -1265,7 +1265,7 @@ export default function App() {
               onClick={() => handleTabChange('search')}
               className="px-6 py-2.5 bg-white border border-[#e2d5c0] text-[#7c4a1e] rounded-lg hover:bg-[#fdf5ea] transition-colors text-sm font-medium"
             >
-              {language === 'ja' ? `すべて見る（${aggregatedCondiments.length}種類）` : `View all (${aggregatedCondiments.length} types)`}
+              {t(language, 'viewAllTypes', { count: aggregatedCondiments.length })}
             </button>
           </div>
         )}
@@ -1286,14 +1286,14 @@ export default function App() {
             className="inline-flex items-center gap-1 hover:text-[#3d1f00] transition-colors"
           >
             <ScrollText size={12} />
-            {language === 'ja' ? '利用規約' : 'Terms'}
+            {t(language, 'terms')}
           </button>
           <button
             onClick={() => setShowLegal('privacy')}
             className="inline-flex items-center gap-1 hover:text-[#3d1f00] transition-colors"
           >
             <ShieldCheck size={12} />
-            {language === 'ja' ? 'プライバシーポリシー' : 'Privacy Policy'}
+            {t(language, 'privacyPolicy')}
           </button>
         </div>
       </main>
@@ -1307,7 +1307,7 @@ export default function App() {
             }`}
           >
             <Home size={20} />
-            <span className="text-[10px] font-medium">{language === 'ja' ? 'ホーム' : 'Home'}</span>
+            <span className="text-[10px] font-medium">{t(language, 'home')}</span>
           </button>
 
           <button
@@ -1317,7 +1317,7 @@ export default function App() {
             }`}
           >
             <Search size={20} />
-            <span className="text-[10px] font-medium">{language === 'ja' ? '検索' : 'Search'}</span>
+            <span className="text-[10px] font-medium">{t(language, 'searchBtn')}</span>
           </button>
 
           <button
@@ -1325,7 +1325,7 @@ export default function App() {
             className="flex flex-col items-center gap-1 px-3 py-2.5 text-[#b09070] hover:text-[#7c4a1e] transition-colors"
           >
             <Sparkles size={20} />
-            <span className="text-[10px] font-medium">{language === 'ja' ? '組み合わせ' : 'Combine'}</span>
+            <span className="text-[10px] font-medium">{t(language, 'combine')}</span>
           </button>
 
           <button
@@ -1336,7 +1336,7 @@ export default function App() {
               <MessageCircle size={20} />
               <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#c17f3a] rounded-full"></span>
             </div>
-            <span className="text-[10px] font-medium">{language === 'ja' ? 'AIチャット' : 'AI Chat'}</span>
+            <span className="text-[10px] font-medium">{t(language, 'aiChat')}</span>
           </button>
 
           <button
@@ -1347,7 +1347,7 @@ export default function App() {
             className="flex flex-col items-center gap-1 px-3 py-2.5 text-[#b09070] hover:text-[#7c4a1e] transition-colors"
           >
             <UserIcon size={20} />
-            <span className="text-[10px] font-medium">{language === 'ja' ? 'マイページ' : 'My Page'}</span>
+            <span className="text-[10px] font-medium">{t(language, 'myPage')}</span>
           </button>
 
           <button
@@ -1362,7 +1362,7 @@ export default function App() {
             className="flex flex-col items-center gap-1 px-3 py-2.5 text-[#b09070] hover:text-[#7c4a1e] transition-colors"
           >
             <Plus size={20} />
-            <span className="text-[10px] font-medium">{language === 'ja' ? '投稿' : 'Post'}</span>
+            <span className="text-[10px] font-medium">{t(language, 'postShort')}</span>
           </button>
         </div>
       </nav>
