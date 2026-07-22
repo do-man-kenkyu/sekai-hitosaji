@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { X, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
-import { signIn, signUp } from '../../lib/auth';
+import { X, Mail, Lock, Eye, EyeOff, Loader2, RefreshCw, Check } from 'lucide-react';
+import { signIn, signUp, resendConfirmationEmail } from '../../lib/auth';
 import { PREFECTURES } from '../types';
 import { TERMS_SECTIONS, PRIVACY_SECTIONS, CONTACT_EMAIL } from '../legalContent';
 
@@ -36,6 +36,17 @@ export function LoginModal({ onClose, onSuccess }: Props) {
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [signupDone, setSignupDone] = useState(false);
+  const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent'>('idle');
+
+  const handleResend = async () => {
+    setResendState('sending');
+    try {
+      await resendConfirmationEmail(email);
+      setResendState('sent');
+    } catch {
+      setResendState('idle');
+    }
+  };
 
   const toggleBadge = (badge: string) => {
     setSelectedBadges(prev =>
@@ -122,9 +133,26 @@ export function LoginModal({ onClose, onSuccess }: Props) {
             <p className="text-xs text-gray-400">
               メールが届かない場合は、迷惑メールフォルダもご確認ください。
             </p>
+            {resendState === 'sent' ? (
+              <p className="w-full flex items-center justify-center gap-1.5 py-2.5 text-sm text-green-600 font-medium">
+                <Check size={16} />
+                確認メールを再送しました
+              </p>
+            ) : (
+              <button
+                onClick={handleResend}
+                disabled={resendState === 'sending'}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-[#c17f3a] text-[#7c4a1e] rounded-xl hover:bg-[#fdf5ea] disabled:opacity-50 transition-colors text-sm font-medium"
+              >
+                {resendState === 'sending'
+                  ? <Loader2 size={16} className="animate-spin" />
+                  : <RefreshCw size={16} />}
+                確認メールを再送する
+              </button>
+            )}
             <button
               onClick={onClose}
-              className="mt-2 w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors"
             >
               閉じる
             </button>

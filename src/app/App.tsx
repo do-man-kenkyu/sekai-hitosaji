@@ -1173,7 +1173,7 @@ export default function App() {
                   setShowAddForm(true);
                 }
               }}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#7c4a1e] text-white rounded-lg hover:bg-[#3d1f00] transition-colors"
             >
               <Plus size={20} />
               {t(language, 'firstCondiment')}

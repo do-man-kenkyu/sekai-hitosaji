@@ -73,7 +73,7 @@ export function TranslateModal({ text, title, onClose, currentLanguage }: Transl
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Globe size={24} className="text-blue-500" />
+            <Globe size={24} className="text-[#c17f3a]" />
             <h2 className="text-xl font-semibold">
               {currentLanguage === 'ja' ? '翻訳' : 'Translate'}
             </h2>
@@ -98,7 +98,7 @@ export function TranslateModal({ text, title, onClose, currentLanguage }: Transl
             <select
               value={selectedLang}
               onChange={(e) => setSelectedLang(e.target.value as TranslationLanguage)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
             >
               {LANGUAGES.map((lang) => (
                 <option key={lang.code} value={lang.code}>
@@ -111,7 +111,7 @@ export function TranslateModal({ text, title, onClose, currentLanguage }: Transl
           <button
             onClick={handleTranslate}
             disabled={isTranslating}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-300"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#7c4a1e] text-white rounded-lg hover:bg-[#3d1f00] transition-colors disabled:bg-gray-300"
           >
             {isTranslating ? (
               <>

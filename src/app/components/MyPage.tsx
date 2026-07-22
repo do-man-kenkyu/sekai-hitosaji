@@ -57,7 +57,7 @@ function PostCard({ post, onViewCondiment, onToggleLike, onToggleBookmark, isLik
         )}
         <div className="flex-1">
           <div className="flex items-start justify-between mb-1">
-            <h4 className="font-semibold cursor-pointer hover:text-blue-600" onClick={() => onViewCondiment(post)}>
+            <h4 className="font-semibold cursor-pointer hover:text-[#7c4a1e]" onClick={() => onViewCondiment(post)}>
               {post.name}
             </h4>
             <div className="flex items-center gap-1 text-sm">
@@ -89,7 +89,7 @@ function PostCard({ post, onViewCondiment, onToggleLike, onToggleBookmark, isLik
             {onEditPost && !confirmDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEditPost(post); }}
-                className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-blue-600 transition-colors ml-auto"
+                className="flex items-center gap-1 px-2 py-1 rounded text-xs bg-gray-100 text-gray-500 hover:bg-blue-100 hover:text-[#7c4a1e] transition-colors ml-auto"
               >
                 <Pencil size={14} />
                 {language === 'ja' ? '編集' : 'Edit'}
@@ -198,7 +198,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
 
         <div className="p-6">
           {/* User Information */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6">
+          <div className="bg-gradient-to-r from-[#fdf5ea] to-[#f5ede0] rounded-lg p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <UserIcon size={20} />
@@ -223,7 +223,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                   <button
                     onClick={handleSave}
                     disabled={!editForm.nickname || !editForm.prefecture || !editForm.city || editForm.tasteBadges.length === 0}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-[#7c4a1e] text-white text-sm rounded-lg hover:bg-[#3d1f00] disabled:opacity-40 transition-colors"
                   >
                     <Check size={14} />
                     {language === 'ja' ? '保存' : 'Save'}
@@ -280,7 +280,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                       value={editForm.nickname}
                       onChange={e => setEditForm(f => ({ ...f, nickname: e.target.value }))}
                       maxLength={20}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white"
                     />
                   </div>
                   <div>
@@ -289,7 +289,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                       type="email"
                       value={editForm.email}
                       onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white"
                     />
                   </div>
                   <div>
@@ -303,7 +303,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                     <select
                       value={editForm.gender}
                       onChange={e => setEditForm(f => ({ ...f, gender: e.target.value as User['gender'] }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white"
                     >
                       <option value="男性">{t(language, 'male')}</option>
                       <option value="女性">{t(language, 'female')}</option>
@@ -316,7 +316,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                     <select
                       value={editForm.prefecture}
                       onChange={e => setEditForm(f => ({ ...f, prefecture: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white"
                     >
                       {PREFECTURES.map(p => <option key={p} value={p}>{p}</option>)}
                     </select>
@@ -327,7 +327,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                       type="text"
                       value={editForm.city}
                       onChange={e => setEditForm(f => ({ ...f, city: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white"
                     />
                   </div>
                 </div>
@@ -385,7 +385,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-blue-500 h-2 rounded-full transition-all"
+                          className="bg-[#c17f3a] h-2 rounded-full transition-all"
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
@@ -403,7 +403,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                 onClick={() => setActiveTab('posts')}
                 className={`flex items-center gap-2 px-4 py-3 font-medium transition-colors border-b-2 ${
                   activeTab === 'posts'
-                    ? 'text-blue-600 border-blue-600'
+                    ? 'text-[#7c4a1e] border-[#7c4a1e]'
                     : 'text-gray-500 border-transparent hover:text-gray-700'
                 }`}
               >

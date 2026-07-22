@@ -90,7 +90,7 @@ export function Comments({ condimentId, currentUser }: Props) {
             {depth === 0 && (
               <button
                 onClick={() => setReplyTo({ id: comment.id, nickname: comment.profiles?.nickname ?? '不明' })}
-                className="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1 ml-auto"
+                className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1 ml-auto"
               >
                 <CornerDownRight size={12} />返信
               </button>

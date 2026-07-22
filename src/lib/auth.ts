@@ -57,6 +57,17 @@ export async function signIn(email: string, password: string) {
   return data.user;
 }
 
+// 確認メールを再送する
+export async function resendConfirmationEmail(email: string) {
+  const emailRedirectTo = `${window.location.origin}${import.meta.env.BASE_URL}`;
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo },
+  });
+  if (error) throw error;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;

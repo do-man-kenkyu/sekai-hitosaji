@@ -159,7 +159,7 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
           onClick={() => setSelectedView('cards')}
           className={`px-4 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
             selectedView === 'cards'
-              ? 'bg-blue-500 text-white'
+              ? 'bg-[#7c4a1e] text-white'
               : 'bg-white text-gray-700 border-2 border-gray-200'
           }`}
         >
@@ -169,7 +169,7 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
           onClick={() => setSelectedView('latest')}
           className={`px-4 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
             selectedView === 'latest'
-              ? 'bg-blue-500 text-white'
+              ? 'bg-[#7c4a1e] text-white'
               : 'bg-white text-gray-700 border-2 border-gray-200'
           }`}
         >

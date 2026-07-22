@@ -191,7 +191,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
               placeholder={language === 'ja' ? '例: 本醸造醤油' : 'e.g., Organic Soy Sauce'}
             />
           </div>
@@ -201,7 +201,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
             >
               {categories.map(cat => (
                 <option key={cat} value={cat}>{t(language, CATEGORY_KEYS[cat])}</option>
@@ -216,7 +216,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
               placeholder={language === 'ja' ? 'この調味料の特徴や使い方を説明してください' : 'Describe the characteristics and usage of this condiment'}
             />
           </div>
@@ -227,7 +227,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               required
               value={formData.origin}
               onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
             >
               <option value="">{t(language, 'selectPrefecture')}</option>
               {PREFECTURES.map(pref => (
@@ -248,7 +248,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
                   type="button"
                   onClick={() => setFormData({ ...formData, repeatRating: value })}
                   className={`p-2 transition-colors ${
-                    value <= formData.repeatRating ? 'text-blue-500' : 'text-gray-300'
+                    value <= formData.repeatRating ? 'text-[#c17f3a]' : 'text-gray-300'
                   }`}
                 >
                   <Repeat size={32} strokeWidth={value <= formData.repeatRating ? 2.5 : 1.5} />
@@ -263,7 +263,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
             <select
               value={formData.purchaseLocation}
               onChange={(e) => setFormData({ ...formData, purchaseLocation: e.target.value as PurchaseLocation })}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
             >
               {purchaseLocations.map(loc => (
                 <option key={loc} value={loc}>{t(language, PURCHASE_LOCATION_KEYS[loc])}</option>
@@ -387,13 +387,13 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
                   value={newDish}
                   onChange={(e) => setNewDish(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDish())}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-[#c17f3a]"
                   placeholder={t(language, 'recommendedDishesPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addDish}
-                  className="px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                  className="px-3 py-2 bg-[#7c4a1e] text-white rounded hover:bg-[#3d1f00] transition-colors"
                 >
                   <Plus size={16} />
                 </button>
@@ -403,13 +403,13 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
                   {recommendedDishes.map((dish, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-[#fdf5ea] text-[#7c4a1e] text-sm rounded-full"
                     >
                       {dish}
                       <button
                         type="button"
                         onClick={() => removeDish(dish)}
-                        className="hover:text-green-900"
+                        className="hover:text-[#3d1f00]"
                       >
                         <X size={14} />
                       </button>
@@ -593,7 +593,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
                 onChange={handleImageFileUpload}
                 className="hidden"
               />
-              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#7c4a1e] text-white rounded hover:bg-[#3d1f00] transition-colors">
                 {uploadingImage ? <Loader2 size={16} className="animate-spin" /> : <Image size={16} />}
                 {uploadingImage ? 'アップロード中...' : t(language, 'uploadImage')}
               </div>
@@ -626,7 +626,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
                 onChange={handleDishImageFileUpload}
                 className="hidden"
               />
-              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+              <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#7c4a1e] text-white rounded hover:bg-[#3d1f00] transition-colors">
                 <Image size={16} />
                 {t(language, 'uploadImage')}
               </div>
@@ -643,7 +643,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+              className="flex-1 px-4 py-2 bg-[#7c4a1e] text-white rounded hover:bg-[#3d1f00] transition-colors"
             >
               {isEditing ? (language === 'ja' ? '更新する' : 'Update') : t(language, 'add')}
             </button>
