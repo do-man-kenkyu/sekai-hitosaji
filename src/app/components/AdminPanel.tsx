@@ -33,9 +33,11 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     return acc;
   }, {} as Record<string, number>);
 
-  const avgAge = users.length > 0
-    ? (users.reduce((sum, user) => sum + user.age, 0) / users.length).toFixed(1)
-    : 0;
+  // 生年月日が登録されているユーザーのみで平均年齢を算出する
+  const usersWithAge = users.filter(u => u.birthdate);
+  const avgAge = usersWithAge.length > 0
+    ? (usersWithAge.reduce((sum, user) => sum + user.age, 0) / usersWithAge.length).toFixed(1)
+    : '—';
 
   const badgeCounts = users.reduce((acc, user) => {
     user.tasteBadges.forEach(badge => {
@@ -104,7 +106,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 </div>
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-green-900 mb-1">{t(language, 'age')}</h3>
-                  <p className="text-3xl font-bold text-green-600">{avgAge}{language === 'ja' ? '歳' : ' yrs'}</p>
+                  <p className="text-3xl font-bold text-green-600">{avgAge}{avgAge !== '—' && (language === 'ja' ? '歳' : ' yrs')}</p>
                 </div>
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-purple-900 mb-2">{t(language, 'gender')}</h3>
@@ -152,8 +154,8 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                     {users.map(user => (
                       <tr key={user.id} className="border-b hover:bg-gray-50">
                         <td className="px-4 py-3 text-sm font-medium">{user.nickname}</td>
-                        <td className="px-4 py-3 text-sm">{user.fullName || <span className="text-gray-300">—</span>}</td>
-                        <td className="px-4 py-3 text-sm">{user.age}{language === 'ja' ? '歳' : ''}</td>
+                        <td className="px-4 py-3 text-sm">{user.fullName || <span className="text-gray-300">未登録</span>}</td>
+                        <td className="px-4 py-3 text-sm">{user.birthdate ? `${user.age}${language === 'ja' ? '歳' : ''}` : <span className="text-gray-300">未登録</span>}</td>
                         <td className="px-4 py-3 text-sm">{user.gender}</td>
                         <td className="px-4 py-3 text-sm">{user.prefecture}</td>
                         <td className="px-4 py-3 text-sm">{user.city}</td>
@@ -208,7 +210,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                           <td className="px-4 py-3 text-sm">{c.category}</td>
                           <td className="px-4 py-3 text-sm">{c.postedBy.nickname}</td>
                           <td className="px-4 py-3 text-sm">
-                            {poster ? `${poster.age}${language === 'ja' ? '歳' : ''} / ${poster.gender}` : <span className="text-gray-300">—</span>}
+                            {poster ? `${poster.birthdate ? `${poster.age}${language === 'ja' ? '歳' : ''}` : '未登録'} / ${poster.gender}` : <span className="text-gray-300">—</span>}
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {poster ? `${poster.prefecture} ${poster.city}` : <span className="text-gray-300">—</span>}
