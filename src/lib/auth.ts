@@ -41,6 +41,12 @@ export async function signUp(data: SignUpData) {
   if (error) throw error;
   if (!authData.user) throw new Error('ユーザー作成に失敗しました');
 
+  // メール確認が有効な場合、既存メールで登録してもSupabaseはセキュリティ上エラーを返さず、
+  // identities が空のダミーユーザーを返す。これを「登録済み」として扱い重複登録を防ぐ。
+  if (authData.user.identities && authData.user.identities.length === 0) {
+    throw new Error('User already registered');
+  }
+
   // session が無い場合はメール確認待ち（確認リンクをクリックするまでログインされない）
   return { user: authData.user, needsEmailConfirmation: !authData.session };
 }
