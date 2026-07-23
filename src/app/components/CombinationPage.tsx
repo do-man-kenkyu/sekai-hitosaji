@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { X, Plus, Sparkles, ChefHat, RefreshCw, ChevronLeft } from 'lucide-react';
-import { Language } from '../i18n/translations';
+import { Language, t } from '../i18n/translations';
 
 interface CombinationPageProps {
   onClose: () => void;
