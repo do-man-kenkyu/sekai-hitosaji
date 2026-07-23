@@ -1,22 +1,25 @@
 import { X, ScrollText, ShieldCheck } from 'lucide-react';
 import {
-  TERMS_SECTIONS,
-  PRIVACY_SECTIONS,
+  getTermsSections,
+  getPrivacySections,
   TERMS_LAST_UPDATED,
   PRIVACY_LAST_UPDATED,
   CONTACT_EMAIL,
 } from '../legalContent';
+import { Language, t } from '../i18n/translations';
 
 interface Props {
   type: 'terms' | 'privacy';
   onClose: () => void;
+  language: Language;
 }
 
-export function LegalModal({ type, onClose }: Props) {
+export function LegalModal({ type, onClose, language }: Props) {
   const isTerms = type === 'terms';
-  const sections = isTerms ? TERMS_SECTIONS : PRIVACY_SECTIONS;
-  const title = isTerms ? '利用規約' : 'プライバシーポリシー';
-  const lastUpdated = isTerms ? TERMS_LAST_UPDATED : PRIVACY_LAST_UPDATED;
+  const sections = isTerms ? getTermsSections(language) : getPrivacySections(language);
+  const title = isTerms ? t(language, 'terms') : t(language, 'privacyPolicy');
+  const updatedMap = isTerms ? TERMS_LAST_UPDATED : PRIVACY_LAST_UPDATED;
+  const lastUpdated = updatedMap[language === 'en' ? 'en' : 'ja'];
   const Icon = isTerms ? ScrollText : ShieldCheck;
 
   return (
@@ -30,7 +33,7 @@ export function LegalModal({ type, onClose }: Props) {
             <Icon size={20} className="text-[#c17f3a]" />
             <div>
               <h2 className="text-xl font-bold text-[#3d1f00]">{title}</h2>
-              <p className="text-[10px] text-[#a07850]">最終更新日：{lastUpdated}</p>
+              <p className="text-[10px] text-[#a07850]">{t(language, 'lastUpdated')}：{lastUpdated}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100">
@@ -50,7 +53,7 @@ export function LegalModal({ type, onClose }: Props) {
               )}
               {contact && (
                 <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 mt-2 border border-[#e8d5b0]">
-                  <p className="text-[#a07850] text-xs">お問い合わせ窓口：</p>
+                  <p className="text-[#a07850] text-xs">{t(language, 'contactWindow')}：</p>
                   <p className="font-medium text-[#3d1f00] text-xs">{CONTACT_EMAIL}</p>
                 </div>
               )}
@@ -63,7 +66,7 @@ export function LegalModal({ type, onClose }: Props) {
             onClick={onClose}
             className="w-full py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] transition-colors text-sm font-medium"
           >
-            閉じる
+            {t(language, 'close')}
           </button>
         </div>
       </div>

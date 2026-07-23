@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { X, Mail, Lock, Eye, EyeOff, Loader2, RefreshCw, Check } from 'lucide-react';
 import { signIn, signUp, resendConfirmationEmail } from '../../lib/auth';
 import { PREFECTURES } from '../types';
-import { TERMS_SECTIONS, PRIVACY_SECTIONS, CONTACT_EMAIL } from '../legalContent';
+import { getTermsSections, getPrivacySections, CONTACT_EMAIL } from '../legalContent';
+import { Language, t } from '../i18n/translations';
 
 const TASTE_BADGES = [
   '辛党','甘党','塩味好き','酸味好き','苦味好き','旨味好き',
@@ -14,9 +15,10 @@ const TASTE_BADGES = [
 interface Props {
   onClose: () => void;
   onSuccess: () => void;
+  language?: Language;
 }
 
-export function LoginModal({ onClose, onSuccess }: Props) {
+export function LoginModal({ onClose, onSuccess, language = 'ja' }: Props) {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -297,10 +299,10 @@ export function LoginModal({ onClose, onSuccess }: Props) {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-1">利用規約・プライバシーポリシー</label>
+                <label className="block text-sm font-semibold mb-1">{t(language, 'terms')}・{t(language, 'privacyPolicy')}</label>
                 <div className="border rounded-lg p-3 max-h-40 overflow-y-auto space-y-3 bg-gray-50 text-xs text-gray-700 leading-relaxed">
-                  <p className="font-bold text-gray-800 text-sm border-b pb-1">■ 利用規約</p>
-                  {TERMS_SECTIONS.map(({ title, body, list, contact }) => (
+                  <p className="font-bold text-gray-800 text-sm border-b pb-1">■ {t(language, 'terms')}</p>
+                  {getTermsSections(language).map(({ title, body, list, contact }) => (
                     <div key={title}>
                       <p className="font-bold text-gray-800 mb-1">{title}</p>
                       {body && <p>{body}</p>}
@@ -310,12 +312,12 @@ export function LoginModal({ onClose, onSuccess }: Props) {
                         </ol>
                       )}
                       {contact && (
-                        <p className="mt-1 text-gray-500">【お問い合わせ窓口】{CONTACT_EMAIL}</p>
+                        <p className="mt-1 text-gray-500">【{t(language, 'contactWindow')}】{CONTACT_EMAIL}</p>
                       )}
                     </div>
                   ))}
-                  <p className="font-bold text-gray-800 text-sm border-b pb-1 pt-2">■ プライバシーポリシー</p>
-                  {PRIVACY_SECTIONS.map(({ title, body, list, contact }) => (
+                  <p className="font-bold text-gray-800 text-sm border-b pb-1 pt-2">■ {t(language, 'privacyPolicy')}</p>
+                  {getPrivacySections(language).map(({ title, body, list, contact }) => (
                     <div key={title}>
                       <p className="font-bold text-gray-800 mb-1">{title}</p>
                       {body && <p>{body}</p>}
@@ -325,7 +327,7 @@ export function LoginModal({ onClose, onSuccess }: Props) {
                         </ol>
                       )}
                       {contact && (
-                        <p className="mt-1 text-gray-500">【お問い合わせ窓口】{CONTACT_EMAIL}</p>
+                        <p className="mt-1 text-gray-500">【{t(language, 'contactWindow')}】{CONTACT_EMAIL}</p>
                       )}
                     </div>
                   ))}

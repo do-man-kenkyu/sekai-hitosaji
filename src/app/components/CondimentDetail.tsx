@@ -195,7 +195,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
               ))}
             </div>
             <div className="px-4 pb-3">
-              <TasteRadarChart tasteProfile={condiment.tasteProfile} size="medium" />
+              <TasteRadarChart tasteProfile={condiment.tasteProfile} size="medium" language={language} />
             </div>
           </div>
 

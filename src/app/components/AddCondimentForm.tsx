@@ -374,7 +374,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               </div>
             </div>
             <div className="bg-gray-50 p-3 rounded">
-              <TasteRadarChart tasteProfile={tasteProfile} size="small" />
+              <TasteRadarChart tasteProfile={tasteProfile} size="small" language={language} />
             </div>
           </div>
 

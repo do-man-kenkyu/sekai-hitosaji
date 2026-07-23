@@ -31,6 +31,18 @@ import { supabase } from '../lib/supabase';
 import { getProfile, signOut, updateProfile } from '../lib/auth';
 import { fetchCondiments, insertCondiment, updateCondiment, deleteCondiment, fetchLikedIds, toggleLike, fetchBookmarkedIds, toggleBookmark, fetchAllUsers } from '../lib/database';
 
+// 言語切替に表示する選択肢。enabled: false の言語は翻訳データ・コードは維持したまま
+// UI上の選択肢から一時的に非表示にしている（将来 true に戻せば即再公開できる）。
+const LANGUAGE_OPTIONS: { value: Language; label: string; enabled: boolean }[] = [
+  { value: 'ja', label: '🇯🇵 日本語', enabled: true },
+  { value: 'en', label: '🇺🇸 English', enabled: true },
+  { value: 'zh', label: '🇨🇳 中文', enabled: false },
+  { value: 'ko', label: '🇰🇷 한국어', enabled: false },
+  { value: 'fr', label: '🇫🇷 Français', enabled: false },
+  { value: 'es', label: '🇪🇸 Español', enabled: false },
+  { value: 'vi', label: '🇻🇳 Tiếng Việt', enabled: false },
+];
+
 export default function App() {
   const [language, setLanguage] = useState<Language>('ja');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -831,13 +843,9 @@ export default function App() {
               onChange={(e) => handleLanguageChange(e.target.value as Language)}
               className="px-2 py-1 text-xs bg-[#ede4d3] text-[#7c4a1e] border-none rounded-lg focus:outline-none focus:ring-1 focus:ring-[#c17f3a] cursor-pointer"
             >
-              <option value="ja">🇯🇵 日本語</option>
-              <option value="en">🇺🇸 English</option>
-              <option value="zh">🇨🇳 中文</option>
-              <option value="ko">🇰🇷 한국어</option>
-              <option value="fr">🇫🇷 Français</option>
-              <option value="es">🇪🇸 Español</option>
-              <option value="vi">🇻🇳 Tiếng Việt</option>
+              {LANGUAGE_OPTIONS.filter(o => o.enabled).map(o => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
             </select>
             {isAdmin(currentUser) && (
               <button
@@ -1422,6 +1430,7 @@ export default function App() {
         <LoginModal
           onClose={() => setShowLoginModal(false)}
           onSuccess={() => setShowLoginModal(false)}
+          language={language}
         />
       )}
 
@@ -1489,6 +1498,7 @@ export default function App() {
         <LegalModal
           type={showLegal}
           onClose={() => setShowLegal(null)}
+          language={language}
         />
       )}
       </div>

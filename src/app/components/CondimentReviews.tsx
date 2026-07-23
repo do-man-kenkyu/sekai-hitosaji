@@ -79,7 +79,7 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language }: 
               <span className="text-[10px] font-bold text-[#7c4a1e] tracking-widest uppercase">{t(language, 'averageRating')}</span>
             </div>
             <div className="px-4 pb-4 pt-2">
-              <TasteRadarChart tasteProfile={aggregated.averageTasteProfile} size="medium" />
+              <TasteRadarChart tasteProfile={aggregated.averageTasteProfile} size="medium" language={language} />
             </div>
           </div>
 
@@ -193,7 +193,7 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language }: 
                         {t(language, 'tasteProfile')}
                       </summary>
                       <div className="mt-2 bg-[#fdf5ea] rounded-xl p-3 border border-[#e8d5b0]">
-                        <TasteRadarChart tasteProfile={post.tasteProfile} size="small" />
+                        <TasteRadarChart tasteProfile={post.tasteProfile} size="small" language={language} />
                       </div>
                     </details>
                   </div>

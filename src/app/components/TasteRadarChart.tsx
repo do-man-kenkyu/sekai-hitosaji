@@ -1,20 +1,22 @@
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
 import { TasteProfile } from '../types';
+import { Language, t } from '../i18n/translations';
 
 interface TasteRadarChartProps {
   tasteProfile: TasteProfile;
   size?: 'small' | 'medium' | 'large';
+  language?: Language;
 }
 
-export function TasteRadarChart({ tasteProfile, size = 'medium' }: TasteRadarChartProps) {
+export function TasteRadarChart({ tasteProfile, size = 'medium', language = 'ja' }: TasteRadarChartProps) {
   const data = [
-    { id: 'sweetness', taste: '甘味', value: tasteProfile.sweetness },
-    { id: 'sourness', taste: '酸味', value: tasteProfile.sourness },
-    { id: 'bitterness', taste: '苦味', value: tasteProfile.bitterness },
-    { id: 'umami', taste: '旨味', value: tasteProfile.umami },
-    { id: 'saltiness', taste: '塩味', value: tasteProfile.saltiness },
-    { id: 'richness', taste: '濃厚さ', value: tasteProfile.richness },
-    { id: 'aroma', taste: '香り', value: tasteProfile.aroma }
+    { id: 'sweetness', taste: t(language, 'sweetness'), value: tasteProfile.sweetness },
+    { id: 'sourness', taste: t(language, 'sourness'), value: tasteProfile.sourness },
+    { id: 'bitterness', taste: t(language, 'bitterness'), value: tasteProfile.bitterness },
+    { id: 'umami', taste: t(language, 'umami'), value: tasteProfile.umami },
+    { id: 'saltiness', taste: t(language, 'saltiness'), value: tasteProfile.saltiness },
+    { id: 'richness', taste: t(language, 'richness'), value: tasteProfile.richness },
+    { id: 'aroma', taste: t(language, 'aroma'), value: tasteProfile.aroma }
   ];
 
   const sizeMap = {
