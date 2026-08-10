@@ -1,6 +1,7 @@
 import { X, Star, MapPin, ChevronLeft, Utensils, ShoppingBag, User, BarChart2 } from 'lucide-react';
-import { AggregatedCondiment } from '../types';
+import { AggregatedCondiment, User as UserType } from '../types';
 import { TasteRadarChart } from './TasteRadarChart';
+import { Comments } from './Comments';
 import { Language, t, PURCHASE_LOCATION_KEYS, CATEGORY_KEYS } from '../i18n/translations';
 
 interface CondimentReviewsProps {
@@ -8,9 +9,10 @@ interface CondimentReviewsProps {
   onClose: () => void;
   onViewUser: (userId: string, nickname: string) => void;
   language: Language;
+  currentUser: UserType | null;
 }
 
-export function CondimentReviews({ aggregated, onClose, onViewUser, language }: CondimentReviewsProps) {
+export function CondimentReviews({ aggregated, onClose, onViewUser, language, currentUser }: CondimentReviewsProps) {
   const locale = language === 'ja' ? 'ja-JP' : 'en-US';
 
   return (
@@ -203,6 +205,9 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language }: 
                         <TasteRadarChart tasteProfile={post.tasteProfile} size="small" language={language} />
                       </div>
                     </details>
+
+                    {/* Comments */}
+                    <Comments condimentId={post.id} currentUser={currentUser} />
                   </div>
                 </div>
               ))}

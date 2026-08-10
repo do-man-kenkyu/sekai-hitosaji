@@ -1392,6 +1392,7 @@ export default function App() {
           onClose={() => setSelectedAggregated(null)}
           onViewUser={handleViewUser}
           language={language}
+          currentUser={currentUser}
         />
       )}
 
