@@ -99,6 +99,17 @@ export interface AggregatedCondiment {
   representativeImage: string;
 }
 
+// AIチャットの1メッセージ。関連調味料は id のみ保持し、表示時に condiments から引き当てる
+// （履歴を保存する際のサイズを最小限にするため）。
+export interface ChatMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'bot';
+  timestamp: Date;
+  relatedCondimentIds?: string[];
+  error?: boolean;
+}
+
 export const PREFECTURES = [
   '北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
   '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',

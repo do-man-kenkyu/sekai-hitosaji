@@ -22,9 +22,10 @@ import { ContactModal } from './components/ContactModal';
 import { LegalModal } from './components/LegalModal';
 import { isAdmin } from './admin';
 import { logSearch } from './searchLog';
+import { loadChatHistory, saveChatHistory, clearChatHistory } from './chatHistory';
 import { CategoryIllustration } from './components/CategoryIllustration';
 import { withBase } from './assetPath';
-import { Condiment, User, AggregatedCondiment } from './types';
+import { Condiment, User, AggregatedCondiment, ChatMessage } from './types';
 import { aggregateCondiments } from './utils/aggregateCondiments';
 import { Language, t, CATEGORY_KEYS } from './i18n/translations';
 import { supabase } from '../lib/supabase';
@@ -69,6 +70,13 @@ export default function App() {
   const [filterCategory, setFilterCategory] = useState('すべて');
   const [likedCondiments, setLikedCondiments] = useState<string[]>([]);
   const [bookmarkedCondiments, setBookmarkedCondiments] = useState<string[]>([]);
+  // AIチャットの履歴。ChatPage ではなくここで持つことで、チャットを閉じても消えない。
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(loadChatHistory);
+
+  // 履歴は sessionStorage にのみ保存する（Supabase には送らない）。
+  useEffect(() => {
+    saveChatHistory(chatMessages);
+  }, [chatMessages]);
 
   const translateText = async (text: string, targetLang: string): Promise<string> => {
     try {
@@ -231,6 +239,10 @@ export default function App() {
         setCurrentUser(null);
         setLikedCondiments([]);
         setBookmarkedCondiments([]);
+        // ログアウトでAIチャットの履歴も破棄する（端末に残さない）
+        setChatMessages([]);
+        clearChatHistory();
+        setShowChat(false);
       }
     });
 
@@ -1476,10 +1488,10 @@ export default function App() {
           onClose={() => setShowChat(false)}
           language={language}
           condiments={condiments}
-          onViewCondiment={(condiment) => {
-            setSelectedCondiment(condiment);
-            setShowChat(false);
-          }}
+          messages={chatMessages}
+          onMessagesChange={setChatMessages}
+          // チャットは開いたままにして詳細を上に重ねる。詳細を閉じれば会話に戻れる。
+          onViewCondiment={(condiment) => setSelectedCondiment(condiment)}
         />
       )}
       {showCombination && (

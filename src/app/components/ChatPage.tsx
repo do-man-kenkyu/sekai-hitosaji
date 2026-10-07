@@ -1,22 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Send, Bot, User as UserIcon, Sparkles, ExternalLink, AlertCircle } from 'lucide-react';
-import { Condiment } from '../types';
+import { Condiment, ChatMessage } from '../types';
 import { Language, t } from '../i18n/translations';
+import { withBase } from '../assetPath';
 
 interface ChatPageProps {
   onClose: () => void;
   language: Language;
   condiments: Condiment[];
   onViewCondiment?: (condiment: Condiment) => void;
-}
-
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-  relatedCondiments?: Condiment[];
-  error?: boolean;
+  // 履歴は App 側で保持する。チャットを閉じてもメッセージが消えないようにするため。
+  messages: ChatMessage[];
+  onMessagesChange: (update: (prev: ChatMessage[]) => ChatMessage[]) => void;
 }
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -189,18 +184,27 @@ function findRelatedCondiments(responseText: string, condiments: Condiment[]): C
   return condiments.filter(c => responseText.includes(c.name)).slice(0, 3);
 }
 
-export function ChatPage({ onClose, language, condiments, onViewCondiment }: ChatPageProps) {
-  const [messages, setMessages] = useState<Message[]>([{
-    id: '0',
-    text: t(language, 'chatGreeting'),
-    sender: 'bot',
-    timestamp: new Date(),
-  }]);
+export function ChatPage({ onClose, language, condiments, onViewCondiment, messages, onMessagesChange }: ChatPageProps) {
+  const setMessages = onMessagesChange;
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const systemPrompt = buildSystemPrompt(condiments, language);
   const apiKeyMissing = !GEMINI_API_KEY || GEMINI_API_KEY.length < 10;
+
+  // 挨拶は履歴には保存せず、常に先頭へ差し込む。
+  // 保存しないことで、言語を切り替えたときもその言語の挨拶が表示される。
+  const greeting: ChatMessage = {
+    id: 'greeting',
+    text: t(language, 'chatGreeting'),
+    sender: 'bot',
+    timestamp: new Date(),
+  };
+  const displayMessages = [greeting, ...messages];
+
+  // id から調味料を引き当てる（履歴には id だけ保存しているため）
+  const resolveCondiments = (ids?: string[]): Condiment[] =>
+    (ids ?? []).map(id => condiments.find(c => c.id === id)).filter((c): c is Condiment => Boolean(c));
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -210,7 +214,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
     const messageText = text || inputText;
     if (!messageText.trim()) return;
 
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: messageText,
       sender: 'user',
@@ -222,13 +226,13 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
 
     try {
       const responseText = await callGemini(messageText, systemPrompt);
-      const relatedCondiments = findRelatedCondiments(responseText, condiments);
+      const relatedCondimentIds = findRelatedCondiments(responseText, condiments).map(c => c.id);
       setMessages(prev => [...prev, {
         id: (Date.now() + 1).toString(),
         text: responseText,
         sender: 'bot',
         timestamp: new Date(),
-        relatedCondiments,
+        relatedCondimentIds,
       }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -286,7 +290,9 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#faf7f2]">
-          {messages.map((message) => (
+          {displayMessages.map((message) => {
+            const relatedCondiments = resolveCondiments(message.relatedCondimentIds);
+            return (
             <div key={message.id} className={`flex gap-2 ${message.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
               <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm mt-1 ${
                 message.sender === 'user' ? 'bg-[#7c4a1e]' : 'bg-[#3d1f00]'
@@ -310,20 +316,20 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
                   </p>
 
                   {/* Related condiment cards */}
-                  {message.relatedCondiments && message.relatedCondiments.length > 0 && (
+                  {relatedCondiments.length > 0 && (
                     <div className="mt-3 space-y-2">
                       <p className="text-xs font-bold text-[#c17f3a] mb-1.5">
                         📚 {t(language, 'viewOnSite')}
                       </p>
-                      {message.relatedCondiments.map(condiment => (
+                      {relatedCondiments.map(condiment => (
                         <div
                           key={condiment.id}
-                          onClick={() => { onViewCondiment?.(condiment); onClose(); }}
+                          onClick={() => onViewCondiment?.(condiment)}
                           className="bg-[#fdf5ea] border border-[#e8d5b0] rounded-xl p-2.5 cursor-pointer hover:bg-[#f5ede0] hover:border-[#c17f3a] transition-all group"
                         >
                           <div className="flex gap-2.5">
                             {condiment.imageUrl && (
-                              <img src={condiment.imageUrl} alt={condiment.name} className="w-14 h-14 object-contain rounded-lg flex-shrink-0 bg-white p-0.5" />
+                              <img src={withBase(condiment.imageUrl)} alt={condiment.name} className="w-14 h-14 object-contain rounded-lg flex-shrink-0 bg-white p-0.5" />
                             )}
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
@@ -350,7 +356,8 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment }: Cha
                 </p>
               </div>
             </div>
-          ))}
+            );
+          })}
 
           {isTyping && (
             <div className="flex gap-2">
