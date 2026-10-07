@@ -21,12 +21,17 @@ export interface TrendArticleInput {
   published: boolean;
 }
 
-// PostgreSQL の「テーブルが存在しない」エラーコード。
+// 「テーブルが存在しない」ことを示すエラーコード。
 // SQL をまだ実行していない状態を、通常のエラーと区別するために使う。
-const UNDEFINED_TABLE = '42P01';
+//   42P01   … PostgreSQL が直接返すコード
+//   PGRST205 … Supabase（PostgREST）がスキーマキャッシュに見つけられなかった場合。
+//              supabase-js 経由では通常こちらが返る。
+const TABLE_MISSING_CODES = ['42P01', 'PGRST205'];
 
 export function isTableMissing(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && (error as { code?: string }).code === UNDEFINED_TABLE;
+  if (typeof error !== 'object' || error === null) return false;
+  const code = (error as { code?: string }).code;
+  return code !== undefined && TABLE_MISSING_CODES.includes(code);
 }
 
 function rowToArticle(row: any): TrendArticle {
