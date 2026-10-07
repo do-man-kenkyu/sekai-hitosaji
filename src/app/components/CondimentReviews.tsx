@@ -207,7 +207,7 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language, cu
                     </details>
 
                     {/* Comments */}
-                    <Comments condimentId={post.id} currentUser={currentUser} />
+                    <Comments condimentId={post.id} currentUser={currentUser} language={language} />
                   </div>
                 </div>
               ))}

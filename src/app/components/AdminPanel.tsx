@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
-import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail } from 'lucide-react';
+import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { getMonthlySearchStats } from '../searchLog';
 import { fetchInquiries, Inquiry } from '../../lib/inquiries';
+import {
+  fetchTrendArticles, insertTrendArticle, updateTrendArticle, deleteTrendArticle,
+  isTableMissing, TrendArticle, TrendArticleInput,
+} from '../../lib/trendArticles';
+
+const EMPTY_ARTICLE: TrendArticleInput = {
+  title: '', body: '', imageUrl: '', linkUrl: '', published: true,
+};
 
 interface AdminPanelProps {
   users: User[];
@@ -12,12 +20,85 @@ interface AdminPanelProps {
   language: Language;
 }
 
-type Tab = 'stats' | 'condiments' | 'search' | 'inquiries';
+type Tab = 'stats' | 'condiments' | 'search' | 'inquiries' | 'articles';
 
 export function AdminPanel({ users, condiments, onClose, language }: AdminPanelProps) {
   const [tab, setTab] = useState<Tab>('stats');
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
+
+  // 運営からのお知らせ記事
+  const [articles, setArticles] = useState<TrendArticle[]>([]);
+  const [articlesLoading, setArticlesLoading] = useState(false);
+  const [articleForm, setArticleForm] = useState<TrendArticleInput>(EMPTY_ARTICLE);
+  const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
+  const [articleSaving, setArticleSaving] = useState(false);
+  const [articleError, setArticleError] = useState('');
+
+  useEffect(() => {
+    if (tab !== 'articles') return;
+    setArticlesLoading(true);
+    setArticleError('');
+    fetchTrendArticles()
+      .then(setArticles)
+      .catch(err => {
+        console.error('お知らせの取得に失敗:', err);
+        setArticleError(isTableMissing(err) ? t(language, 'articleTableMissing') : String(err.message ?? err));
+      })
+      .finally(() => setArticlesLoading(false));
+  }, [tab, language]);
+
+  const resetArticleForm = () => {
+    setArticleForm(EMPTY_ARTICLE);
+    setEditingArticleId(null);
+    setArticleError('');
+  };
+
+  const handleArticleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!articleForm.title.trim() || !articleForm.body.trim()) return;
+    setArticleSaving(true);
+    setArticleError('');
+    try {
+      if (editingArticleId) {
+        const updated = await updateTrendArticle(editingArticleId, articleForm);
+        setArticles(prev => prev.map(a => (a.id === updated.id ? updated : a)));
+      } else {
+        const created = await insertTrendArticle(articleForm);
+        setArticles(prev => [created, ...prev]);
+      }
+      resetArticleForm();
+    } catch (err: any) {
+      console.error('お知らせの保存に失敗:', err);
+      setArticleError(
+        isTableMissing(err) ? t(language, 'articleTableMissing') : t(language, 'articleSaveFailed')
+      );
+    } finally {
+      setArticleSaving(false);
+    }
+  };
+
+  const handleArticleEdit = (article: TrendArticle) => {
+    setEditingArticleId(article.id);
+    setArticleForm({
+      title: article.title,
+      body: article.body,
+      imageUrl: article.imageUrl ?? '',
+      linkUrl: article.linkUrl ?? '',
+      published: article.published,
+    });
+  };
+
+  const handleArticleDelete = async (id: string) => {
+    if (!window.confirm(t(language, 'articleDeleteConfirm'))) return;
+    try {
+      await deleteTrendArticle(id);
+      setArticles(prev => prev.filter(a => a.id !== id));
+      if (editingArticleId === id) resetArticleForm();
+    } catch (err) {
+      console.error('お知らせの削除に失敗:', err);
+    }
+  };
 
   useEffect(() => {
     if (tab !== 'inquiries') return;
@@ -59,6 +140,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     { key: 'condiments', label: language === 'ja' ? '調味料別投稿者' : 'By Condiment', icon: <Package size={15} /> },
     { key: 'search', label: language === 'ja' ? '月別検索' : 'Searches', icon: <Search size={15} /> },
     { key: 'inquiries', label: t(language, 'inquiries'), icon: <Mail size={15} /> },
+    { key: 'articles', label: t(language, 'trendArticles'), icon: <Newspaper size={15} /> },
   ];
 
   return (
@@ -299,6 +381,125 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                       </div>
                       <p className="text-sm text-gray-700 whitespace-pre-wrap mb-2">{inquiry.message}</p>
                       <p className="text-xs text-gray-500">{inquiry.name} &lt;{inquiry.email}&gt;</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {tab === 'articles' && (
+            <>
+              <h3 className="font-semibold text-[#3d1f00] mb-3 flex items-center gap-2">
+                <Newspaper size={16} className="text-[#c17f3a]" />
+                {t(language, 'trendArticles')}
+              </h3>
+
+              {articleError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+                  {articleError}
+                </p>
+              )}
+
+              {/* 投稿・編集フォーム */}
+              <form onSubmit={handleArticleSave} className="border border-[#e2d5c0] rounded-lg p-4 mb-5 bg-[#fdf5ea] space-y-3">
+                <p className="text-sm font-semibold text-[#3d1f00]">
+                  {editingArticleId ? t(language, 'articleEdit') : t(language, 'articleNew')}
+                </p>
+                <input
+                  value={articleForm.title}
+                  onChange={e => setArticleForm({ ...articleForm, title: e.target.value })}
+                  placeholder={t(language, 'articleTitle')}
+                  maxLength={120}
+                  required
+                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
+                />
+                <textarea
+                  value={articleForm.body}
+                  onChange={e => setArticleForm({ ...articleForm, body: e.target.value })}
+                  placeholder={t(language, 'articleBody')}
+                  maxLength={5000}
+                  required
+                  rows={5}
+                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a] resize-y"
+                />
+                <input
+                  value={articleForm.imageUrl ?? ''}
+                  onChange={e => setArticleForm({ ...articleForm, imageUrl: e.target.value })}
+                  placeholder={t(language, 'articleImageUrl')}
+                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
+                />
+                <input
+                  value={articleForm.linkUrl ?? ''}
+                  onChange={e => setArticleForm({ ...articleForm, linkUrl: e.target.value })}
+                  placeholder={t(language, 'articleLinkUrl')}
+                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
+                />
+                <label className="flex items-center gap-2 text-sm text-[#5c3d20]">
+                  <input
+                    type="checkbox"
+                    checked={articleForm.published}
+                    onChange={e => setArticleForm({ ...articleForm, published: e.target.checked })}
+                    className="accent-[#7c4a1e]"
+                  />
+                  {t(language, 'articlePublished')}
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={articleSaving || !articleForm.title.trim() || !articleForm.body.trim()}
+                    className="bg-[#7c4a1e] hover:bg-[#3d1f00] disabled:opacity-40 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
+                  >
+                    {articleSaving && <Loader2 size={14} className="animate-spin" />}
+                    {t(language, 'articleSave')}
+                  </button>
+                  {editingArticleId && (
+                    <button
+                      type="button"
+                      onClick={resetArticleForm}
+                      className="px-4 py-2 rounded-lg text-sm border border-[#e2d5c0] text-[#7c4a1e] hover:bg-white"
+                    >
+                      {t(language, 'articleCancel')}
+                    </button>
+                  )}
+                </div>
+              </form>
+
+              {/* 既存の記事一覧 */}
+              {articlesLoading ? (
+                <div className="flex justify-center py-6"><Loader2 className="animate-spin text-gray-400" /></div>
+              ) : articles.length === 0 ? (
+                <p className="text-sm text-gray-400 text-center py-4">{t(language, 'trendArticlesEmpty')}</p>
+              ) : (
+                <div className="space-y-3">
+                  {articles.map(article => (
+                    <div key={article.id} className="border border-[#e2d5c0] rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <h4 className="font-semibold text-[#3d1f00] flex-1">{article.title}</h4>
+                        {!article.published && (
+                          <span className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">
+                            {t(language, 'articleDraft')}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => handleArticleEdit(article)}
+                          className="text-[#c17f3a] hover:text-[#7c4a1e] flex-shrink-0"
+                          aria-label={t(language, 'articleEdit')}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleArticleDelete(article.id)}
+                          className="text-red-400 hover:text-red-600 flex-shrink-0"
+                          aria-label={t(language, 'articleDelete')}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-400 mb-2">
+                        {new Date(article.createdAt).toLocaleString(language === 'ja' ? 'ja-JP' : 'en-US')}
+                      </p>
+                      <p className="text-sm text-gray-700 whitespace-pre-wrap line-clamp-3">{article.body}</p>
                     </div>
                   ))}
                 </div>

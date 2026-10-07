@@ -259,7 +259,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
 
           {/* Comments */}
           <div className="bg-white rounded-2xl border border-[#e2d5c0] overflow-hidden">
-            <Comments condimentId={condiment.id} currentUser={currentUser ?? null} />
+            <Comments condimentId={condiment.id} currentUser={currentUser ?? null} language={language} />
           </div>
 
           <div className="h-4" />

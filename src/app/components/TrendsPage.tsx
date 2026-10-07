@@ -1,9 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  TrendingUp, Star, MapPin, Flame, Crown, Utensils, BarChart2, Search
+  TrendingUp, Star, MapPin, Flame, Crown, Utensils, BarChart2, Search,
+  Newspaper, ExternalLink, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Condiment } from '../types';
-import { Language } from '../i18n/translations';
+import { Language, t } from '../i18n/translations';
+import { withBase } from '../assetPath';
+import { fetchTrendArticles, TrendArticle } from '../../lib/trendArticles';
 
 interface TrendsPageProps {
   condiments: Condiment[];
@@ -43,6 +46,16 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
   const isJa = language === 'ja';
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedView, setSelectedView] = useState<'cards' | 'latest'>('cards');
+
+  // 運営からのお知らせ記事。テーブル未作成なら空配列が返るので、その場合は何も表示しない。
+  const [articles, setArticles] = useState<TrendArticle[]>([]);
+  const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchTrendArticles()
+      .then(list => setArticles(list.filter(a => a.published)))
+      .catch(err => console.error('お知らせの取得に失敗:', err));
+  }, []);
 
   // Top rated condiments (by repeatRating)
   const topRated = useMemo(() =>
@@ -176,6 +189,65 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
           📋 {isJa ? '一覧' : 'List'}
         </button>
       </div>
+
+      {/* 運営からのお知らせ */}
+      {articles.length > 0 && (
+        <div className="mb-6">
+          <h3 className="font-bold text-[#3d1f00] mb-3 flex items-center gap-2">
+            <Newspaper size={18} className="text-[#c17f3a]" />
+            {t(language, 'trendArticles')}
+          </h3>
+          <div className="space-y-3">
+            {articles.map(article => {
+              const expanded = expandedArticleId === article.id;
+              return (
+                <div key={article.id} className="bg-white rounded-2xl border border-[#e2d5c0] shadow-sm overflow-hidden">
+                  {article.imageUrl && (
+                    <img
+                      src={withBase(article.imageUrl)}
+                      alt={article.title}
+                      className="w-full h-40 object-cover"
+                    />
+                  )}
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-bold text-[#3d1f00] flex-1">{article.title}</h4>
+                      <span className="text-[10px] text-[#a07850] flex-shrink-0">
+                        {new Date(article.createdAt).toLocaleDateString(isJa ? 'ja-JP' : 'en-US', {
+                          year: 'numeric', month: 'short', day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                    <p className={`text-sm text-[#5c3d20] whitespace-pre-wrap leading-relaxed ${expanded ? '' : 'line-clamp-3'}`}>
+                      {article.body}
+                    </p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <button
+                        onClick={() => setExpandedArticleId(expanded ? null : article.id)}
+                        className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
+                      >
+                        {expanded
+                          ? <>{isJa ? '閉じる' : 'Close'}<ChevronUp size={12} /></>
+                          : <>{t(language, 'learnMore')}<ChevronDown size={12} /></>}
+                      </button>
+                      {article.linkUrl && (
+                        <a
+                          href={article.linkUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
+                        >
+                          {isJa ? 'リンクを開く' : 'Open link'}<ExternalLink size={12} />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Trend card as single box (same size as other cards) */}
       {selectedView === 'cards' && (

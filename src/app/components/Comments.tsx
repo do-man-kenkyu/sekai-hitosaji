@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { MessageCircle, CornerDownRight, Trash2, Loader2, Send } from 'lucide-react';
+import { MessageCircle, CornerDownRight, Trash2, Loader2, Send, Languages } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import type { User } from '../types';
+import { Language, t } from '../i18n/translations';
+import { translateText } from '../translate';
 
 interface CommentRow {
   id: string;
@@ -17,14 +19,27 @@ interface CommentRow {
 interface Props {
   condimentId: string;
   currentUser: User | null;
+  language: Language;
 }
 
-export function Comments({ condimentId, currentUser }: Props) {
+// 入れ子になったコメントを平らに並べ直す（翻訳対象をまとめて集めるため）
+function flatten(comments: CommentRow[]): CommentRow[] {
+  return comments.flatMap(c => [c, ...flatten(c.replies ?? [])]);
+}
+
+export function Comments({ condimentId, currentUser, language }: Props) {
   const [comments, setComments] = useState<CommentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [replyTo, setReplyTo] = useState<{ id: string; nickname: string } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // コメント本文の翻訳結果（コメントid → 訳文）
+  const [translated, setTranslated] = useState<Record<string, string>>({});
+  // 原文に戻して読みたいコメントのid
+  const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({});
+
+  const isJa = language === 'ja';
+  const locale = isJa ? 'ja-JP' : 'en-US';
 
   const fetchComments = async () => {
     const { data, error } = await supabase
@@ -50,6 +65,31 @@ export function Comments({ condimentId, currentUser }: Props) {
 
   useEffect(() => { fetchComments(); }, [condimentId]);
 
+  // 日本語以外を選んでいるときは、コメント本文も自動で翻訳する。
+  // 調味料の説明文が自動翻訳されるのと揃えるため。
+  useEffect(() => {
+    if (isJa) { setTranslated({}); return; }
+
+    let cancelled = false;
+    const targets = flatten(comments).filter(c => translated[c.id] === undefined);
+    if (targets.length === 0) return;
+
+    (async () => {
+      const results = await Promise.all(
+        targets.map(async c => [c.id, await translateText(c.content, language)] as const)
+      );
+      if (cancelled) return;
+      setTranslated(prev => {
+        const next = { ...prev };
+        results.forEach(([id, text]) => { next[id] = text; });
+        return next;
+      });
+    })();
+
+    return () => { cancelled = true; };
+    // translated は意図的に依存に入れない（翻訳するたびに再実行されてしまうため）
+  }, [comments, language, isJa]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser || !newComment.trim()) return;
@@ -69,51 +109,70 @@ export function Comments({ condimentId, currentUser }: Props) {
   };
 
   const handleDelete = async (commentId: string) => {
-    if (!window.confirm('このコメントを削除しますか？')) return;
+    if (!window.confirm(t(language, 'commentDeleteConfirm'))) return;
     await supabase.from('comments').delete().eq('id', commentId);
     await fetchComments();
   };
 
   const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('ja-JP', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    new Date(iso).toLocaleDateString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-  const CommentItem = ({ comment, depth = 0 }: { comment: CommentRow; depth?: number }) => (
-    <div className={`${depth > 0 ? 'ml-8 border-l-2 border-gray-100 pl-4' : ''}`}>
-      <div className="flex gap-3 py-3">
-        <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold text-sm flex-shrink-0">
-          {comment.profiles?.nickname?.[0] ?? '?'}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold">{comment.profiles?.nickname ?? '不明'}</span>
-            <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
-            {depth === 0 && (
+  const CommentItem = ({ comment, depth = 0 }: { comment: CommentRow; depth?: number }) => {
+    const translation = translated[comment.id];
+    const isTranslatable = !isJa && translation !== undefined && translation !== comment.content;
+    const viewingOriginal = showOriginal[comment.id] ?? false;
+    const body = isTranslatable && !viewingOriginal ? translation : comment.content;
+    const unknown = t(language, 'commentUnknownUser');
+
+    return (
+      <div className={`${depth > 0 ? 'ml-8 border-l-2 border-gray-100 pl-4' : ''}`}>
+        <div className="flex gap-3 py-3">
+          <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-semibold text-sm flex-shrink-0">
+            {comment.profiles?.nickname?.[0] ?? '?'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-semibold">{comment.profiles?.nickname ?? unknown}</span>
+              <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
+              {depth === 0 && (
+                <button
+                  onClick={() => setReplyTo({ id: comment.id, nickname: comment.profiles?.nickname ?? unknown })}
+                  className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1 ml-auto"
+                >
+                  <CornerDownRight size={12} />{t(language, 'commentReply')}
+                </button>
+              )}
+              {currentUser?.id === comment.user_id && (
+                <button onClick={() => handleDelete(comment.id)}
+                  className="text-xs text-red-400 hover:text-red-600 ml-1">
+                  <Trash2 size={12} />
+                </button>
+              )}
+            </div>
+            <p className="text-sm text-gray-700 leading-relaxed">{body}</p>
+            {isTranslatable && (
               <button
-                onClick={() => setReplyTo({ id: comment.id, nickname: comment.profiles?.nickname ?? '不明' })}
-                className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1 ml-auto"
+                onClick={() => setShowOriginal(prev => ({ ...prev, [comment.id]: !viewingOriginal }))}
+                className="mt-1 text-[11px] text-[#a07850] hover:text-[#7c4a1e] flex items-center gap-1"
               >
-                <CornerDownRight size={12} />返信
-              </button>
-            )}
-            {currentUser?.id === comment.user_id && (
-              <button onClick={() => handleDelete(comment.id)}
-                className="text-xs text-red-400 hover:text-red-600 ml-1">
-                <Trash2 size={12} />
+                <Languages size={11} />
+                {viewingOriginal
+                  ? t(language, 'commentShowTranslation')
+                  : `${t(language, 'commentTranslated')} · ${t(language, 'commentShowOriginal')}`}
               </button>
             )}
           </div>
-          <p className="text-sm text-gray-700 leading-relaxed">{comment.content}</p>
         </div>
+        {comment.replies?.map(r => <CommentItem key={r.id} comment={r} depth={depth + 1} />)}
       </div>
-      {comment.replies?.map(r => <CommentItem key={r.id} comment={r} depth={depth + 1} />)}
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="mt-6 border-t pt-6">
       <h3 className="font-semibold text-base mb-4 flex items-center gap-2">
         <MessageCircle size={18} className="text-orange-500" />
-        コメント
+        {t(language, 'commentsTitle')}
         <span className="text-sm font-normal text-gray-400">
           ({comments.reduce((acc, c) => acc + 1 + (c.replies?.length ?? 0), 0)})
         </span>
@@ -122,7 +181,7 @@ export function Comments({ condimentId, currentUser }: Props) {
       {loading ? (
         <div className="flex justify-center py-6"><Loader2 className="animate-spin text-gray-400" /></div>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-4">まだコメントがありません。最初のコメントを投稿してみましょう！</p>
+        <p className="text-sm text-gray-400 text-center py-4">{t(language, 'commentEmpty')}</p>
       ) : (
         <div className="divide-y divide-gray-50 mb-4">
           {comments.map(c => <CommentItem key={c.id} comment={c} />)}
@@ -134,7 +193,7 @@ export function Comments({ condimentId, currentUser }: Props) {
           {replyTo && (
             <div className="mb-2 flex items-center gap-2 text-sm text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
               <CornerDownRight size={14} />
-              <span>{replyTo.nickname} への返信</span>
+              <span>{t(language, 'commentReplyingTo', { nickname: replyTo.nickname })}</span>
               <button type="button" onClick={() => setReplyTo(null)} className="ml-auto text-gray-400 hover:text-gray-600">✕</button>
             </div>
           )}
@@ -142,7 +201,7 @@ export function Comments({ condimentId, currentUser }: Props) {
             <input
               value={newComment}
               onChange={e => setNewComment(e.target.value)}
-              placeholder="コメントを入力..."
+              placeholder={t(language, 'commentPlaceholder')}
               maxLength={500}
               className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
             />
@@ -158,7 +217,7 @@ export function Comments({ condimentId, currentUser }: Props) {
         </form>
       ) : (
         <p className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded-lg">
-          コメントするには<span className="text-orange-500 font-medium">ログイン</span>が必要です
+          {t(language, 'commentLoginRequired')}
         </p>
       )}
     </div>

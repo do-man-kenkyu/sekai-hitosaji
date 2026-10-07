@@ -23,6 +23,7 @@ import { LegalModal } from './components/LegalModal';
 import { isAdmin } from './admin';
 import { logSearch } from './searchLog';
 import { loadChatHistory, saveChatHistory, clearChatHistory } from './chatHistory';
+import { useIdleLogout, markActivity, clearActivity } from './idleLogout';
 import { CategoryIllustration } from './components/CategoryIllustration';
 import { withBase } from './assetPath';
 import { Condiment, User, AggregatedCondiment, ChatMessage } from './types';
@@ -72,6 +73,15 @@ export default function App() {
   const [bookmarkedCondiments, setBookmarkedCondiments] = useState<string[]>([]);
   // AIチャットの履歴。ChatPage ではなくここで持つことで、チャットを閉じても消えない。
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(loadChatHistory);
+  // 無操作で自動ログアウトした直後かどうか（理由を画面に出すため）
+  const [idleLoggedOut, setIdleLoggedOut] = useState(false);
+
+  // 1時間操作がなければ自動ログアウトする
+  useIdleLogout(!!currentUser, () => {
+    clearActivity();
+    setIdleLoggedOut(true);
+    signOut().catch(err => console.error('自動ログアウトに失敗:', err));
+  });
 
   // 履歴は sessionStorage にのみ保存する（Supabase には送らない）。
   useEffect(() => {
@@ -235,6 +245,9 @@ export default function App() {
           setBookmarkedCondiments(bookmarks);
         }
         setShowLoginModal(false);
+        // 無操作タイマーをここから数え直す
+        markActivity();
+        setIdleLoggedOut(false);
       } else if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
         setLikedCondiments([]);
@@ -243,6 +256,7 @@ export default function App() {
         setChatMessages([]);
         clearChatHistory();
         setShowChat(false);
+        clearActivity();
       }
     });
 
@@ -843,6 +857,19 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#faf7f2]">
       <div className="min-h-screen relative pb-20 sm:pb-0 bg-[#faf7f2] transition-all duration-300 max-w-7xl mx-auto">
+      {/* 無操作で自動ログアウトしたことを知らせる帯 */}
+      {idleLoggedOut && (
+        <div className="fixed top-0 left-0 right-0 z-[70] bg-[#3d1f00] text-white text-xs sm:text-sm px-4 py-2.5 flex items-center justify-center gap-3 shadow-lg">
+          <span>{t(language, 'autoLoggedOut')}</span>
+          <button
+            onClick={() => setIdleLoggedOut(false)}
+            className="text-white/70 hover:text-white flex-shrink-0"
+            aria-label="閉じる"
+          >
+            <XIcon size={16} />
+          </button>
+        </div>
+      )}
       <header className="bg-[#faf7f2] border-b border-[#e2d5c0] sticky top-0 z-30">
         <div className="px-4 py-3 flex items-center justify-between">
           <div>
