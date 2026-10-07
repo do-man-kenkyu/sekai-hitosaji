@@ -40,7 +40,7 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
 
   return (
     <div
-      className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center sm:p-6"
+      className="fixed inset-0 bg-black/60 z-[60] flex items-end sm:items-center justify-center sm:p-6"
       onClick={onClose}
     >
     <div
