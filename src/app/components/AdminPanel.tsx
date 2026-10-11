@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
+import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText, Image as ImageIcon, Download } from 'lucide-react';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { getMonthlySearchStats } from '../searchLog';
 import { fetchInquiries, Inquiry } from '../../lib/inquiries';
+import { fetchAllUsers, fetchCondiments, fetchAllLikeCounts } from '../../lib/database';
+import { downloadCsv, timestampedFileName, formatDateTime } from '../utils/csv';
 import {
   fetchTrendArticles, insertTrendArticle, updateTrendArticle, deleteTrendArticle,
   isTableMissing, isColumnMissing, isBodyRequiredInDb, TrendArticle, TrendArticleInput,
@@ -139,6 +141,88 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     });
   };
 
+  // ===== CSVダウンロード =====
+  // どのボタンも、押した時点で Supabase から取り直す。画面を開いたままでも
+  // そのあとに増えた投稿・登録が必ず含まれるようにするため。
+  const [downloading, setDownloading] = useState<string | null>(null);
+  const [downloadError, setDownloadError] = useState('');
+
+  const runDownload = async (key: string, build: () => Promise<{ name: string; rows: (string | number | null)[][] }>) => {
+    setDownloading(key);
+    setDownloadError('');
+    try {
+      const { name, rows } = await build();
+      downloadCsv(timestampedFileName(name), rows);
+    } catch (err) {
+      console.error('ダウンロードに失敗:', err);
+      setDownloadError(t(language, 'downloadFailed'));
+    } finally {
+      setDownloading(null);
+    }
+  };
+
+  const downloadUsers = () => runDownload('users', async () => {
+    const latest = await fetchAllUsers();
+    const rows: (string | number | null)[][] = [
+      ['ニックネーム', '氏名', '生年月日', '年齢', '性別', '都道府県', '市区町村', '味覚バッジ', 'ユーザーID'],
+      ...latest.map(u => [
+        u.nickname, u.fullName ?? '', u.birthdate ?? '', u.age || '',
+        u.gender, u.prefecture, u.city, u.tasteBadges.join('・'), u.id,
+      ]),
+    ];
+    return { name: 'ユーザー一覧', rows };
+  });
+
+  const downloadCondiments = () => runDownload('condiments', async () => {
+    const [latest, likeCounts] = await Promise.all([fetchCondiments(), fetchAllLikeCounts()]);
+    const rows: (string | number | null)[][] = [
+      ['投稿日時', '調味料名', 'カテゴリ', '産地', 'リピート評価', 'いいね数', '購入場所',
+        '甘味', '酸味', '苦味', '旨味', '塩味', '濃厚さ', '香り',
+        'おすすめ料理', '投稿者', '投稿者ID', '説明'],
+      ...latest.map(c => [
+        formatDateTime(c.createdAt), c.name, c.category, c.origin,
+        c.repeatRating, likeCounts[c.id] ?? 0, c.purchaseLocation,
+        c.tasteProfile.sweetness, c.tasteProfile.sourness, c.tasteProfile.bitterness,
+        c.tasteProfile.umami, c.tasteProfile.saltiness, c.tasteProfile.richness, c.tasteProfile.aroma,
+        c.recommendedDishes.join('・'), c.postedBy.nickname, c.postedBy.userId, c.description,
+      ]),
+    ];
+    return { name: '投稿一覧', rows };
+  });
+
+  const downloadInquiries = () => runDownload('inquiries', async () => {
+    const latest = await fetchInquiries();
+    const rows: (string | number | null)[][] = [
+      ['受信日時', '件名', 'お名前', 'メールアドレス', '本文', 'ユーザーID'],
+      ...latest.map(i => [
+        formatDateTime(i.createdAt), i.subject, i.name, i.email, i.message, i.userId ?? '',
+      ]),
+    ];
+    return { name: 'お問い合わせ', rows };
+  });
+
+  const downloadSearches = () => runDownload('search', async () => {
+    const rows: (string | number | null)[][] = [['月', '検索キーワード', '回数']];
+    getMonthlySearchStats().forEach(month => {
+      month.terms.forEach(term => rows.push([month.month, term.term, term.count]));
+    });
+    return { name: '検索キーワード', rows };
+  });
+
+  // 各タブの見出し横に置くダウンロードボタン
+  const DownloadButton = ({ onClick, busyKey }: { onClick: () => void; busyKey: string }) => (
+    <button
+      onClick={onClick}
+      disabled={downloading !== null}
+      title={t(language, 'downloadHint')}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-[#c17f3a] text-[#7c4a1e] hover:bg-[#fdf5ea] disabled:opacity-40 flex-shrink-0"
+    >
+      {downloading === busyKey
+        ? <><Loader2 size={13} className="animate-spin" />{t(language, 'downloadPreparing')}</>
+        : <><Download size={13} />{t(language, 'downloadCsv')}</>}
+    </button>
+  );
+
   const handleArticleDelete = async (id: string) => {
     if (!window.confirm(t(language, 'articleDeleteConfirm'))) return;
     try {
@@ -229,8 +313,20 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
 
         <div className="p-6">
           {/* ── 統計タブ ── */}
+          {downloadError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-3">
+              {downloadError}
+            </p>
+          )}
+
           {tab === 'stats' && (
             <>
+              <div className="flex items-center justify-between gap-2 mb-3">
+                <p className="text-sm text-gray-500">
+                  {language === 'ja' ? 'ユーザー情報を一覧で保存できます。' : 'Save the user list.'}
+                </p>
+                <DownloadButton onClick={downloadUsers} busyKey="users" />
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-blue-900 mb-1">{t(language, 'totalUsers')}</h3>
@@ -314,6 +410,9 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
           {/* ── 調味料別投稿者タブ ── */}
           {tab === 'condiments' && (
             <>
+              <div className="flex justify-end mb-3">
+                <DownloadButton onClick={downloadCondiments} busyKey="condiments" />
+              </div>
               <p className="text-sm text-gray-500 mb-4">
                 {language === 'ja'
                   ? '各調味料の投稿者と、その投稿者のユーザー情報を確認できます（管理者のみ）。'
@@ -364,6 +463,9 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
           {/* ── 月別検索タブ ── */}
           {tab === 'search' && (
             <>
+              <div className="flex justify-end mb-3">
+                <DownloadButton onClick={downloadSearches} busyKey="search" />
+              </div>
               <p className="text-sm text-gray-500 mb-4">
                 {language === 'ja'
                   ? 'ユーザーが月ごとに何を検索しているか、上位から表示します。'
@@ -411,6 +513,9 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
           {/* ── お問い合わせタブ ── */}
           {tab === 'inquiries' && (
             <>
+              <div className="flex justify-end mb-3">
+                <DownloadButton onClick={downloadInquiries} busyKey="inquiries" />
+              </div>
               {inquiriesLoading ? (
                 <div className="text-center py-12 text-gray-500">
                   {language === 'ja' ? '読み込み中...' : 'Loading...'}
