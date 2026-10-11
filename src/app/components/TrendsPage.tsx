@@ -7,6 +7,7 @@ import { Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { withBase } from '../assetPath';
 import { fetchTrendArticles, TrendArticle } from '../../lib/trendArticles';
+import { PdfInline } from './PdfInline';
 
 interface TrendsPageProps {
   condiments: Condiment[];
@@ -248,6 +249,8 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
                         </a>
                       )}
                     </div>
+                    {/* PDFは開かなくても読めるよう、中身をその場に描画する */}
+                    {article.pdfUrl && <PdfInline url={article.pdfUrl} language={language} />}
                     {/* リンクはURLそのものを見せる（どこへ行くのか分かるように） */}
                     {article.linkUrl && (
                       <a
