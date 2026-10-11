@@ -157,20 +157,22 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
   return (
     <div className="pb-6">
       {/* Search bar + Home/List buttons */}
+      {/* スマホ幅でははみ出さないよう、入力欄を縮められるようにして余白も詰める。
+          min-w-0 が無いと input の既定幅が下限になり、横スクロールが発生する。 */}
       <div className="flex items-center gap-2 mb-6">
-        <div className="relative flex-1">
-          <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="relative flex-1 min-w-0">
+          <Search size={18} className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder={isJa ? '🔍 検索' : '🔍 Search'}
+            placeholder={isJa ? '検索' : 'Search'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 border-2 border-gray-900 rounded-lg focus:outline-none focus:border-blue-500"
+            className="w-full pl-9 sm:pl-12 pr-3 py-2.5 sm:py-3 text-sm border-2 border-gray-900 rounded-lg focus:outline-none focus:border-blue-500"
           />
         </div>
         <button
           onClick={() => setSelectedView('cards')}
-          className={`px-4 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg font-semibold whitespace-nowrap flex-shrink-0 transition-colors ${
             selectedView === 'cards'
               ? 'bg-[#7c4a1e] text-white'
               : 'bg-white text-gray-700 border-2 border-gray-200'
@@ -180,7 +182,7 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
         </button>
         <button
           onClick={() => setSelectedView('latest')}
-          className={`px-4 py-3 rounded-lg font-semibold whitespace-nowrap transition-colors ${
+          className={`px-3 sm:px-4 py-2.5 sm:py-3 text-sm rounded-lg font-semibold whitespace-nowrap flex-shrink-0 transition-colors ${
             selectedView === 'latest'
               ? 'bg-[#7c4a1e] text-white'
               : 'bg-white text-gray-700 border-2 border-gray-200'
