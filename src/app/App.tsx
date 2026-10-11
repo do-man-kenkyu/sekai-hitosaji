@@ -16,7 +16,6 @@ import { RankingPage } from './components/RankingPage';
 import { LoginModal } from './components/LoginModal';
 import { NotificationBell } from './components/NotificationBell';
 import { ShareModal } from './components/ShareModal';
-import { AdCarousel } from './components/AdCarousel';
 import { CondimentMap } from './components/CondimentMap';
 import { ContactModal } from './components/ContactModal';
 import { LegalModal } from './components/LegalModal';
@@ -1138,9 +1137,6 @@ export default function App() {
                 </div>
               </div>
             )}
-
-            {/* Ad Carousel (below ranking) */}
-            <AdCarousel language={language} />
 
             {/* Category Section */}
             <div className="mb-7">
