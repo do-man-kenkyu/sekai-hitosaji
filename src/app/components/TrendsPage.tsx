@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   TrendingUp, Star, MapPin, Flame, Crown, Utensils, BarChart2, Search,
-  Newspaper, ExternalLink, ChevronDown, ChevronUp
+  Newspaper, ExternalLink, ChevronDown, ChevronUp, FileText
 } from 'lucide-react';
 import { Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
@@ -230,6 +230,16 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
                           ? <>{isJa ? '閉じる' : 'Close'}<ChevronUp size={12} /></>
                           : <>{t(language, 'learnMore')}<ChevronDown size={12} /></>}
                       </button>
+                      {article.pdfUrl && (
+                        <a
+                          href={article.pdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
+                        >
+                          <FileText size={12} />{t(language, 'openPdf')}
+                        </a>
+                      )}
                       {article.linkUrl && (
                         <a
                           href={article.linkUrl}

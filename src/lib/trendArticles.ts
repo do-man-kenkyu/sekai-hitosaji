@@ -9,6 +9,7 @@ export interface TrendArticle {
   body: string;
   imageUrl: string | null;
   linkUrl: string | null;
+  pdfUrl: string | null;
   published: boolean;
   createdAt: string;
 }
@@ -18,6 +19,7 @@ export interface TrendArticleInput {
   body: string;
   imageUrl?: string | null;
   linkUrl?: string | null;
+  pdfUrl?: string | null;
   published: boolean;
 }
 
@@ -34,6 +36,13 @@ export function isTableMissing(error: unknown): boolean {
   return code !== undefined && TABLE_MISSING_CODES.includes(code);
 }
 
+// PGRST204 … 列がスキーマキャッシュに無い。pdf_url を追加する SQL が
+//            未実行の状態を見分けるために使う。
+export function isColumnMissing(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  return (error as { code?: string }).code === 'PGRST204';
+}
+
 function rowToArticle(row: any): TrendArticle {
   return {
     id: row.id,
@@ -41,6 +50,7 @@ function rowToArticle(row: any): TrendArticle {
     body: row.body,
     imageUrl: row.image_url ?? null,
     linkUrl: row.link_url ?? null,
+    pdfUrl: row.pdf_url ?? null,
     published: row.published,
     createdAt: row.created_at,
   };
@@ -53,6 +63,7 @@ function inputToRow(input: TrendArticleInput) {
     // 空文字は NULL として保存する（画像なし・リンクなしを区別するため）
     image_url: input.imageUrl?.trim() || null,
     link_url: input.linkUrl?.trim() || null,
+    pdf_url: input.pdfUrl?.trim() || null,
     published: input.published,
   };
 }

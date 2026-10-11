@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
-import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText } from 'lucide-react';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { getMonthlySearchStats } from '../searchLog';
 import { fetchInquiries, Inquiry } from '../../lib/inquiries';
 import {
   fetchTrendArticles, insertTrendArticle, updateTrendArticle, deleteTrendArticle,
-  isTableMissing, TrendArticle, TrendArticleInput,
+  isTableMissing, isColumnMissing, TrendArticle, TrendArticleInput,
 } from '../../lib/trendArticles';
+import { uploadArticlePdf } from '../../lib/storage';
 
 const EMPTY_ARTICLE: TrendArticleInput = {
-  title: '', body: '', imageUrl: '', linkUrl: '', published: true,
+  title: '', body: '', imageUrl: '', linkUrl: '', pdfUrl: '', published: true,
 };
 
 interface AdminPanelProps {
@@ -34,6 +35,25 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
   const [articleSaving, setArticleSaving] = useState(false);
   const [articleError, setArticleError] = useState('');
+  const [pdfUploading, setPdfUploading] = useState(false);
+
+  const handlePdfSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // 同じファイルを選び直せるよう、input の値は毎回空に戻す
+    e.target.value = '';
+    if (!file) return;
+    setPdfUploading(true);
+    setArticleError('');
+    try {
+      const url = await uploadArticlePdf(file);
+      setArticleForm(prev => ({ ...prev, pdfUrl: url }));
+    } catch (err: any) {
+      console.error('PDFのアップロードに失敗:', err);
+      setArticleError(err?.message ?? 'PDFのアップロードに失敗しました');
+    } finally {
+      setPdfUploading(false);
+    }
+  };
 
   useEffect(() => {
     if (tab !== 'articles') return;
@@ -71,7 +91,9 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     } catch (err: any) {
       console.error('お知らせの保存に失敗:', err);
       setArticleError(
-        isTableMissing(err) ? t(language, 'articleTableMissing') : t(language, 'articleSaveFailed')
+        isTableMissing(err) ? t(language, 'articleTableMissing')
+          : isColumnMissing(err) ? t(language, 'articlePdfColumnMissing')
+          : t(language, 'articleSaveFailed')
       );
     } finally {
       setArticleSaving(false);
@@ -85,6 +107,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
       body: article.body,
       imageUrl: article.imageUrl ?? '',
       linkUrl: article.linkUrl ?? '',
+      pdfUrl: article.pdfUrl ?? '',
       published: article.published,
     });
   };
@@ -435,6 +458,45 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                   placeholder={t(language, 'articleLinkUrl')}
                   className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
                 />
+                {/* PDF添付 */}
+                <div>
+                  {articleForm.pdfUrl ? (
+                    <div className="flex items-center gap-2 text-sm text-[#5c3d20] bg-white border border-[#e2d5c0] rounded-lg px-3 py-2">
+                      <FileText size={15} className="text-[#c17f3a] flex-shrink-0" />
+                      <a
+                        href={articleForm.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 truncate text-[#7c4a1e] hover:underline"
+                      >
+                        {t(language, 'articlePdfAttached')}
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setArticleForm({ ...articleForm, pdfUrl: '' })}
+                        className="text-xs text-red-400 hover:text-red-600 flex-shrink-0"
+                      >
+                        {t(language, 'articlePdfRemove')}
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex items-center gap-2 text-sm text-[#5c3d20] cursor-pointer">
+                      <span className="px-3 py-1.5 bg-white border border-[#e2d5c0] rounded-lg hover:border-[#c17f3a] flex items-center gap-1.5">
+                        {pdfUploading
+                          ? <><Loader2 size={14} className="animate-spin" />{t(language, 'articlePdfUploading')}</>
+                          : <><FileText size={14} className="text-[#c17f3a]" />{t(language, 'articlePdf')}</>}
+                      </span>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handlePdfSelect}
+                        disabled={pdfUploading}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
                 <label className="flex items-center gap-2 text-sm text-[#5c3d20]">
                   <input
                     type="checkbox"
@@ -447,7 +509,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    disabled={articleSaving || !articleForm.title.trim() || !articleForm.body.trim()}
+                    disabled={articleSaving || pdfUploading || !articleForm.title.trim() || !articleForm.body.trim()}
                     className="bg-[#7c4a1e] hover:bg-[#3d1f00] disabled:opacity-40 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
                   >
                     {articleSaving && <Loader2 size={14} className="animate-spin" />}

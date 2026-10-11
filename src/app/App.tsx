@@ -1081,6 +1081,14 @@ export default function App() {
                 >
                   <Trophy size={15} className="text-[#c17f3a]" />
                 </button>
+                {/* スマホではハンバーガーメニューが出ないため、ここがトレンドへの唯一の入口 */}
+                <button
+                  onClick={() => handleTabChange('trends')}
+                  className="flex items-center gap-1 px-3 py-2.5 bg-[#fdf5ea] border border-[#c17f3a] text-[#7c4a1e] rounded-xl hover:bg-[#f5ede0] transition-colors text-sm font-medium flex-shrink-0"
+                  title={t(language, 'trends')}
+                >
+                  <TrendingUp size={15} className="text-[#c17f3a]" />
+                </button>
               </div>
               {committedSearch && (
                 <button
