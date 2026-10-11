@@ -247,17 +247,19 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
                           <FileText size={12} />{t(language, 'openPdf')}
                         </a>
                       )}
-                      {article.linkUrl && (
-                        <a
-                          href={article.linkUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
-                        >
-                          {isJa ? 'リンクを開く' : 'Open link'}<ExternalLink size={12} />
-                        </a>
-                      )}
                     </div>
+                    {/* リンクはURLそのものを見せる（どこへ行くのか分かるように） */}
+                    {article.linkUrl && (
+                      <a
+                        href={article.linkUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-start gap-1 text-xs text-[#c17f3a] hover:text-[#7c4a1e] hover:underline"
+                      >
+                        <ExternalLink size={12} className="mt-0.5 flex-shrink-0" />
+                        <span className="break-all">{article.linkUrl}</span>
+                      </a>
+                    )}
                   </div>
                 </div>
               );

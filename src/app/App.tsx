@@ -856,7 +856,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#faf7f2]">
-      <div className="min-h-screen relative pb-20 sm:pb-0 bg-[#faf7f2] transition-all duration-300 max-w-7xl mx-auto">
+      <div className="min-h-screen relative pb-32 sm:pb-0 bg-[#faf7f2] transition-all duration-300 max-w-7xl mx-auto">
       {/* 無操作で自動ログアウトしたことを知らせる帯 */}
       {idleLoggedOut && (
         <div className="fixed top-0 left-0 right-0 z-[70] bg-[#3d1f00] text-white text-xs sm:text-sm px-4 py-2.5 flex items-center justify-center gap-3 shadow-lg">
@@ -1081,13 +1081,13 @@ export default function App() {
                 >
                   <Trophy size={15} className="text-[#c17f3a]" />
                 </button>
-                {/* スマホではハンバーガーメニューが出ないため、ここがトレンドへの唯一の入口 */}
+                {/* 組み合わせはここから。トレンドは下部タブに移した（トレンドを目立たせるため入れ替え） */}
                 <button
-                  onClick={() => handleTabChange('trends')}
+                  onClick={() => setShowCombination(true)}
                   className="flex items-center gap-1 px-3 py-2.5 bg-[#fdf5ea] border border-[#c17f3a] text-[#7c4a1e] rounded-xl hover:bg-[#f5ede0] transition-colors text-sm font-medium flex-shrink-0"
-                  title={t(language, 'trends')}
+                  title={t(language, 'combine')}
                 >
-                  <TrendingUp size={15} className="text-[#c17f3a]" />
+                  <Sparkles size={15} className="text-[#c17f3a]" />
                 </button>
               </div>
               {committedSearch && (
@@ -1376,11 +1376,13 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => setShowCombination(true)}
-            className="flex flex-col items-center gap-1 px-3 py-2.5 text-[#b09070] hover:text-[#7c4a1e] transition-colors"
+            onClick={() => handleTabChange('trends')}
+            className={`flex flex-col items-center gap-1 px-3 py-2.5 transition-colors ${
+              activeTab === 'trends' ? 'text-[#3d1f00]' : 'text-[#b09070] hover:text-[#7c4a1e]'
+            }`}
           >
-            <Sparkles size={20} />
-            <span className="text-[10px] font-medium">{t(language, 'combine')}</span>
+            <TrendingUp size={20} />
+            <span className="text-[10px] font-medium">{t(language, 'trends')}</span>
           </button>
 
           <button

@@ -189,4 +189,11 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* スマホ下部の固定ナビ用。これまでクラス名だけあって中身が無かったため、
+     ナビが画面の最下端に貼り付き、iPhone のホームインジケータとも重なって
+     押しにくくなっていた。5mm（約19px）分の余白と、端末ごとの安全領域を足す。 */
+  .safe-area-bottom {
+    padding-bottom: calc(19px + env(safe-area-inset-bottom, 0px));
+  }
 }
