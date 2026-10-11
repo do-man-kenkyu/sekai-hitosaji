@@ -236,12 +236,12 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
                         rel="noopener noreferrer"
                         className="mt-3 flex items-start gap-1.5 text-[#c17f3a] hover:text-[#7c4a1e] hover:underline"
                       >
-                        <ExternalLink size={16} className="mt-1 flex-shrink-0" />
+                        <ExternalLink size={20} className="mt-1 flex-shrink-0" />
                         <span className="min-w-0">
                           {article.linkLabel && (
-                            <span className="block text-base font-medium">{article.linkLabel}</span>
+                            <span className="block text-lg font-semibold">{article.linkLabel}</span>
                           )}
-                          <span className="block text-sm break-all">{article.linkUrl}</span>
+                          <span className="block text-lg break-all">{article.linkUrl}</span>
                         </span>
                       </a>
                     )}

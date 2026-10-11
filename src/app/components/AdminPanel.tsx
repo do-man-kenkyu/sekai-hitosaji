@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
@@ -121,7 +121,12 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     }
   };
 
+  // 編集ボタンを押したとき、入力欄は一覧より上にあって画面外のことが多い。
+  // そのままだと「押しても何も起きない」ように見えるので、入力欄まで送る。
+  const articleFormRef = useRef<HTMLFormElement>(null);
+
   const handleArticleEdit = (article: TrendArticle) => {
+    articleFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setEditingArticleId(article.id);
     setArticleForm({
       title: article.title,
@@ -447,9 +452,19 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
               )}
 
               {/* 投稿・編集フォーム */}
-              <form onSubmit={handleArticleSave} className="border border-[#e2d5c0] rounded-lg p-4 mb-5 bg-[#fdf5ea] space-y-3">
+              <form
+                ref={articleFormRef}
+                onSubmit={handleArticleSave}
+                className={`rounded-lg p-4 mb-5 space-y-3 ${
+                  editingArticleId
+                    ? 'border-2 border-[#c17f3a] bg-[#fdf5ea]'
+                    : 'border border-[#e2d5c0] bg-[#fdf5ea]'
+                }`}
+              >
                 <p className="text-sm font-semibold text-[#3d1f00]">
-                  {editingArticleId ? t(language, 'articleEdit') : t(language, 'articleNew')}
+                  {editingArticleId
+                    ? `${t(language, 'articleEdit')}：${articleForm.title || ''}`
+                    : t(language, 'articleNew')}
                 </p>
                 {/* タイトル（必須） */}
                 <div>
@@ -641,10 +656,9 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                         )}
                         <button
                           onClick={() => handleArticleEdit(article)}
-                          className="text-[#c17f3a] hover:text-[#7c4a1e] flex-shrink-0"
-                          aria-label={t(language, 'articleEdit')}
+                          className="flex items-center gap-1 px-2.5 py-1 text-xs rounded-lg border border-[#c17f3a] text-[#7c4a1e] hover:bg-[#fdf5ea] flex-shrink-0"
                         >
-                          <Pencil size={14} />
+                          <Pencil size={13} />{t(language, 'articleEdit')}
                         </button>
                         <button
                           onClick={() => handleArticleDelete(article.id)}
