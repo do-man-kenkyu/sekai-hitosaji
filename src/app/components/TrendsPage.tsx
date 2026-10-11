@@ -220,18 +220,23 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
                         })}
                       </span>
                     </div>
-                    <p className={`text-sm text-[#5c3d20] whitespace-pre-wrap leading-relaxed ${expanded ? '' : 'line-clamp-3'}`}>
-                      {article.body}
-                    </p>
+                    {/* 本文は任意。タイトルとPDFだけの記事もある。 */}
+                    {article.body && (
+                      <p className={`text-sm text-[#5c3d20] whitespace-pre-wrap leading-relaxed ${expanded ? '' : 'line-clamp-3'}`}>
+                        {article.body}
+                      </p>
+                    )}
                     <div className="flex items-center gap-4 mt-2">
-                      <button
-                        onClick={() => setExpandedArticleId(expanded ? null : article.id)}
-                        className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
-                      >
-                        {expanded
-                          ? <>{isJa ? '閉じる' : 'Close'}<ChevronUp size={12} /></>
-                          : <>{t(language, 'learnMore')}<ChevronDown size={12} /></>}
-                      </button>
+                      {article.body && (
+                        <button
+                          onClick={() => setExpandedArticleId(expanded ? null : article.id)}
+                          className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
+                        >
+                          {expanded
+                            ? <>{isJa ? '閉じる' : 'Close'}<ChevronUp size={12} /></>
+                            : <>{t(language, 'learnMore')}<ChevronDown size={12} /></>}
+                        </button>
+                      )}
                       {article.pdfUrl && (
                         <a
                           href={article.pdfUrl}

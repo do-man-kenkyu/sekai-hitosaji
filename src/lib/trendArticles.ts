@@ -43,11 +43,20 @@ export function isColumnMissing(error: unknown): boolean {
   return (error as { code?: string }).code === 'PGRST204';
 }
 
+// 23502 … NOT NULL 違反、23514 … CHECK 違反。
+// 本文を任意にする SQL が未実行のまま本文を空で保存しようとした場合に出る。
+export function isBodyRequiredInDb(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const code = (error as { code?: string }).code;
+  return code === '23502' || code === '23514';
+}
+
 function rowToArticle(row: any): TrendArticle {
   return {
     id: row.id,
     title: row.title,
-    body: row.body,
+    // 本文は任意。未入力の記事は DB 上 NULL になる。
+    body: row.body ?? '',
     imageUrl: row.image_url ?? null,
     linkUrl: row.link_url ?? null,
     pdfUrl: row.pdf_url ?? null,
@@ -59,7 +68,7 @@ function rowToArticle(row: any): TrendArticle {
 function inputToRow(input: TrendArticleInput) {
   return {
     title: input.title.trim(),
-    body: input.body.trim(),
+    body: input.body.trim() || null,
     // 空文字は NULL として保存する（画像なし・リンクなしを区別するため）
     image_url: input.imageUrl?.trim() || null,
     link_url: input.linkUrl?.trim() || null,

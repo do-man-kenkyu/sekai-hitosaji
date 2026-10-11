@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText } from 'lucide-react';
+import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText, Image as ImageIcon } from 'lucide-react';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { getMonthlySearchStats } from '../searchLog';
 import { fetchInquiries, Inquiry } from '../../lib/inquiries';
 import {
   fetchTrendArticles, insertTrendArticle, updateTrendArticle, deleteTrendArticle,
-  isTableMissing, isColumnMissing, TrendArticle, TrendArticleInput,
+  isTableMissing, isColumnMissing, isBodyRequiredInDb, TrendArticle, TrendArticleInput,
 } from '../../lib/trendArticles';
-import { uploadArticlePdf } from '../../lib/storage';
+import { uploadArticlePdf, uploadArticleImage } from '../../lib/storage';
 
 const EMPTY_ARTICLE: TrendArticleInput = {
   title: '', body: '', imageUrl: '', linkUrl: '', pdfUrl: '', published: true,
@@ -36,6 +36,25 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
   const [articleSaving, setArticleSaving] = useState(false);
   const [articleError, setArticleError] = useState('');
   const [pdfUploading, setPdfUploading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // 同じファイルを選び直せるよう、input の値は毎回空に戻す
+    e.target.value = '';
+    if (!file) return;
+    setImageUploading(true);
+    setArticleError('');
+    try {
+      const url = await uploadArticleImage(file);
+      setArticleForm(prev => ({ ...prev, imageUrl: url }));
+    } catch (err: any) {
+      console.error('画像のアップロードに失敗:', err);
+      setArticleError(err?.message ?? '画像のアップロードに失敗しました');
+    } finally {
+      setImageUploading(false);
+    }
+  };
 
   const handlePdfSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -76,7 +95,8 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
 
   const handleArticleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!articleForm.title.trim() || !articleForm.body.trim()) return;
+    // 必須はタイトルのみ。本文・画像・リンク・PDFはすべて任意。
+    if (!articleForm.title.trim()) return;
     setArticleSaving(true);
     setArticleError('');
     try {
@@ -93,6 +113,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
       setArticleError(
         isTableMissing(err) ? t(language, 'articleTableMissing')
           : isColumnMissing(err) ? t(language, 'articlePdfColumnMissing')
+          : isBodyRequiredInDb(err) ? t(language, 'articleBodyNotNullSql')
           : t(language, 'articleSaveFailed')
       );
     } finally {
@@ -429,35 +450,98 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 <p className="text-sm font-semibold text-[#3d1f00]">
                   {editingArticleId ? t(language, 'articleEdit') : t(language, 'articleNew')}
                 </p>
-                <input
-                  value={articleForm.title}
-                  onChange={e => setArticleForm({ ...articleForm, title: e.target.value })}
-                  placeholder={t(language, 'articleTitle')}
-                  maxLength={120}
-                  required
-                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
-                />
-                <textarea
-                  value={articleForm.body}
-                  onChange={e => setArticleForm({ ...articleForm, body: e.target.value })}
-                  placeholder={t(language, 'articleBody')}
-                  maxLength={5000}
-                  required
-                  rows={5}
-                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a] resize-y"
-                />
-                <input
-                  value={articleForm.imageUrl ?? ''}
-                  onChange={e => setArticleForm({ ...articleForm, imageUrl: e.target.value })}
-                  placeholder={t(language, 'articleImageUrl')}
-                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
-                />
-                <input
-                  value={articleForm.linkUrl ?? ''}
-                  onChange={e => setArticleForm({ ...articleForm, linkUrl: e.target.value })}
-                  placeholder={t(language, 'articleLinkUrl')}
-                  className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
-                />
+                {/* タイトル（必須） */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs text-[#5c3d20] mb-1">
+                    {t(language, 'articleTitle')}
+                    <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+                      {t(language, 'fieldRequired')}
+                    </span>
+                  </label>
+                  <input
+                    value={articleForm.title}
+                    onChange={e => setArticleForm({ ...articleForm, title: e.target.value })}
+                    maxLength={120}
+                    required
+                    className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
+                  />
+                </div>
+
+                {/* 本文（任意） */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs text-[#5c3d20] mb-1">
+                    {t(language, 'articleBody')}
+                    <span className="text-[10px] bg-[#f5ede0] text-[#a07850] px-1.5 py-0.5 rounded">
+                      {t(language, 'fieldOptional')}
+                    </span>
+                  </label>
+                  <textarea
+                    value={articleForm.body}
+                    onChange={e => setArticleForm({ ...articleForm, body: e.target.value })}
+                    maxLength={5000}
+                    rows={5}
+                    className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a] resize-y"
+                  />
+                </div>
+
+                {/* 画像（任意・ファイルを選んでアップロード） */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs text-[#5c3d20] mb-1">
+                    {t(language, 'articleImage')}
+                    <span className="text-[10px] bg-[#f5ede0] text-[#a07850] px-1.5 py-0.5 rounded">
+                      {t(language, 'fieldOptional')}
+                    </span>
+                  </label>
+                  {articleForm.imageUrl ? (
+                    <div className="flex items-center gap-3 bg-white border border-[#e2d5c0] rounded-lg p-2">
+                      <img
+                        src={articleForm.imageUrl}
+                        alt={t(language, 'articleImageAttached')}
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                      />
+                      <span className="flex-1 text-sm text-[#5c3d20] truncate">
+                        {t(language, 'articleImageAttached')}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setArticleForm({ ...articleForm, imageUrl: '' })}
+                        className="text-xs text-red-400 hover:text-red-600 flex-shrink-0"
+                      >
+                        {t(language, 'articlePdfRemove')}
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="inline-flex items-center gap-2 text-sm text-[#5c3d20] cursor-pointer">
+                      <span className="px-3 py-1.5 bg-white border border-[#e2d5c0] rounded-lg hover:border-[#c17f3a] flex items-center gap-1.5">
+                        {imageUploading
+                          ? <><Loader2 size={14} className="animate-spin" />{t(language, 'articlePdfUploading')}</>
+                          : <><ImageIcon size={14} className="text-[#c17f3a]" />{t(language, 'articleImage')}</>}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        disabled={imageUploading}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* リンクURL（任意） */}
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs text-[#5c3d20] mb-1">
+                    {t(language, 'articleLinkUrl')}
+                    <span className="text-[10px] bg-[#f5ede0] text-[#a07850] px-1.5 py-0.5 rounded">
+                      {t(language, 'fieldOptional')}
+                    </span>
+                  </label>
+                  <input
+                    value={articleForm.linkUrl ?? ''}
+                    onChange={e => setArticleForm({ ...articleForm, linkUrl: e.target.value })}
+                    className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
+                  />
+                </div>
                 {/* PDF添付 */}
                 <div>
                   {articleForm.pdfUrl ? (
@@ -509,7 +593,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    disabled={articleSaving || pdfUploading || !articleForm.title.trim() || !articleForm.body.trim()}
+                    disabled={articleSaving || pdfUploading || imageUploading || !articleForm.title.trim()}
                     className="bg-[#7c4a1e] hover:bg-[#3d1f00] disabled:opacity-40 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
                   >
                     {articleSaving && <Loader2 size={14} className="animate-spin" />}
