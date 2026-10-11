@@ -11,7 +11,7 @@ import {
 import { uploadArticlePdf, uploadArticleImage } from '../../lib/storage';
 
 const EMPTY_ARTICLE: TrendArticleInput = {
-  title: '', body: '', imageUrl: '', linkUrl: '', pdfUrl: '', published: true,
+  title: '', body: '', imageUrl: '', linkUrl: '', linkLabel: '', pdfUrl: '', published: true,
 };
 
 interface AdminPanelProps {
@@ -128,6 +128,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
       body: article.body,
       imageUrl: article.imageUrl ?? '',
       linkUrl: article.linkUrl ?? '',
+      linkLabel: article.linkLabel ?? '',
       pdfUrl: article.pdfUrl ?? '',
       published: article.published,
     });
@@ -539,8 +540,19 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                   <input
                     value={articleForm.linkUrl ?? ''}
                     onChange={e => setArticleForm({ ...articleForm, linkUrl: e.target.value })}
+                    placeholder="https://..."
                     className="w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
                   />
+                  {/* リンクを入れたときだけ、その説明を書く欄を出す */}
+                  {articleForm.linkUrl?.trim() && (
+                    <input
+                      value={articleForm.linkLabel ?? ''}
+                      onChange={e => setArticleForm({ ...articleForm, linkLabel: e.target.value })}
+                      placeholder={t(language, 'articleLinkLabel')}
+                      maxLength={120}
+                      className="mt-2 w-full border border-[#e2d5c0] rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#c17f3a]"
+                    />
+                  )}
                 </div>
                 {/* PDF添付 */}
                 <div>

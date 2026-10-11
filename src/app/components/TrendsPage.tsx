@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   TrendingUp, Star, MapPin, Flame, Crown, Utensils, BarChart2, Search,
-  Newspaper, ExternalLink, ChevronDown, ChevronUp, FileText
+  Newspaper, ExternalLink
 } from 'lucide-react';
 import { Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
@@ -50,7 +50,6 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
 
   // 運営からのお知らせ記事。テーブル未作成なら空配列が返るので、その場合は何も表示しない。
   const [articles, setArticles] = useState<TrendArticle[]>([]);
-  const [expandedArticleId, setExpandedArticleId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTrendArticles()
@@ -196,13 +195,12 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
       {/* 運営からのお知らせ */}
       {articles.length > 0 && (
         <div className="mb-6">
-          <h3 className="font-bold text-[#3d1f00] mb-3 flex items-center gap-2">
-            <Newspaper size={18} className="text-[#c17f3a]" />
+          <h3 className="font-bold text-[#3d1f00] text-lg mb-3 flex items-center gap-2">
+            <Newspaper size={22} className="text-[#c17f3a]" />
             {t(language, 'trendArticles')}
           </h3>
           <div className="space-y-3">
             {articles.map(article => {
-              const expanded = expandedArticleId === article.id;
               return (
                 <div key={article.id} className="bg-white rounded-2xl border border-[#e2d5c0] shadow-sm overflow-hidden">
                   {article.imageUrl && (
@@ -213,54 +211,38 @@ export function TrendsPage({ condiments, likedCondiments, bookmarkedCondiments, 
                     />
                   )}
                   <div className="p-4">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className="font-bold text-[#3d1f00] flex-1">{article.title}</h4>
-                      <span className="text-[10px] text-[#a07850] flex-shrink-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <h4 className="font-bold text-[#3d1f00] text-xl flex-1">{article.title}</h4>
+                      <span className="text-xs text-[#a07850] flex-shrink-0">
                         {new Date(article.createdAt).toLocaleDateString(isJa ? 'ja-JP' : 'en-US', {
                           year: 'numeric', month: 'short', day: 'numeric',
                         })}
                       </span>
                     </div>
-                    {/* 本文は任意。タイトルとPDFだけの記事もある。 */}
+                    {/* 本文は任意。タイトルとPDFだけの記事もある。
+                        「詳しく見る」で畳まず、最初から全文を出す。 */}
                     {article.body && (
-                      <p className={`text-sm text-[#5c3d20] whitespace-pre-wrap leading-relaxed ${expanded ? '' : 'line-clamp-3'}`}>
+                      <p className="text-base text-[#5c3d20] whitespace-pre-wrap leading-relaxed">
                         {article.body}
                       </p>
                     )}
-                    <div className="flex items-center gap-4 mt-2">
-                      {article.body && (
-                        <button
-                          onClick={() => setExpandedArticleId(expanded ? null : article.id)}
-                          className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
-                        >
-                          {expanded
-                            ? <>{isJa ? '閉じる' : 'Close'}<ChevronUp size={12} /></>
-                            : <>{t(language, 'learnMore')}<ChevronDown size={12} /></>}
-                        </button>
-                      )}
-                      {article.pdfUrl && (
-                        <a
-                          href={article.pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-[#c17f3a] hover:text-[#7c4a1e] flex items-center gap-1"
-                        >
-                          <FileText size={12} />{t(language, 'openPdf')}
-                        </a>
-                      )}
-                    </div>
                     {/* PDFは開かなくても読めるよう、中身をその場に描画する */}
                     {article.pdfUrl && <PdfInline url={article.pdfUrl} language={language} />}
-                    {/* リンクはURLそのものを見せる（どこへ行くのか分かるように） */}
+                    {/* リンクは説明文（あれば）とURLの両方を見せる */}
                     {article.linkUrl && (
                       <a
                         href={article.linkUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="mt-2 flex items-start gap-1 text-xs text-[#c17f3a] hover:text-[#7c4a1e] hover:underline"
+                        className="mt-3 flex items-start gap-1.5 text-[#c17f3a] hover:text-[#7c4a1e] hover:underline"
                       >
-                        <ExternalLink size={12} className="mt-0.5 flex-shrink-0" />
-                        <span className="break-all">{article.linkUrl}</span>
+                        <ExternalLink size={16} className="mt-1 flex-shrink-0" />
+                        <span className="min-w-0">
+                          {article.linkLabel && (
+                            <span className="block text-base font-medium">{article.linkLabel}</span>
+                          )}
+                          <span className="block text-sm break-all">{article.linkUrl}</span>
+                        </span>
                       </a>
                     )}
                   </div>

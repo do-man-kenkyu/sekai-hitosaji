@@ -9,6 +9,8 @@ export interface TrendArticle {
   body: string;
   imageUrl: string | null;
   linkUrl: string | null;
+  // リンクが何かを説明する文。未設定ならURLだけを表示する。
+  linkLabel: string | null;
   pdfUrl: string | null;
   published: boolean;
   createdAt: string;
@@ -19,6 +21,7 @@ export interface TrendArticleInput {
   body: string;
   imageUrl?: string | null;
   linkUrl?: string | null;
+  linkLabel?: string | null;
   pdfUrl?: string | null;
   published: boolean;
 }
@@ -59,6 +62,7 @@ function rowToArticle(row: any): TrendArticle {
     body: row.body ?? '',
     imageUrl: row.image_url ?? null,
     linkUrl: row.link_url ?? null,
+    linkLabel: row.link_label ?? null,
     pdfUrl: row.pdf_url ?? null,
     published: row.published,
     createdAt: row.created_at,
@@ -72,6 +76,7 @@ function inputToRow(input: TrendArticleInput) {
     // 空文字は NULL として保存する（画像なし・リンクなしを区別するため）
     image_url: input.imageUrl?.trim() || null,
     link_url: input.linkUrl?.trim() || null,
+    link_label: input.linkLabel?.trim() || null,
     pdf_url: input.pdfUrl?.trim() || null,
     published: input.published,
   };

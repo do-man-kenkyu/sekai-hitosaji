@@ -88,11 +88,21 @@ export function PdfInline({ url, language }: Props) {
     return () => { cancelled = true; };
   }, [url]);
 
-  // 表示できなかった場合は何も出さない。呼び出し側に「PDFを開く」リンクが
-  // 常にあるので、そちらから読んでもらう。
+  // 描画に失敗したときだけ、別タブで開くためのリンクを出す。
+  // 通常時はボタンを置かない方針なので、ここが唯一の逃げ道になる。
   if (status === 'error') {
     return (
-      <p className="mt-2 text-xs text-[#a07850]">{t(language, 'pdfLoadError')}</p>
+      <p className="mt-2 text-sm text-[#a07850]">
+        {t(language, 'pdfLoadError')}{' '}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#c17f3a] hover:text-[#7c4a1e] underline"
+        >
+          {t(language, 'openPdf')}
+        </a>
+      </p>
     );
   }
 
@@ -115,8 +125,16 @@ export function PdfInline({ url, language }: Props) {
       )}
 
       {status === 'ready' && totalPages > MAX_PAGES && (
-        <p className="text-xs text-[#a07850] text-center py-2">
-          {t(language, 'pdfMorePages', { n: totalPages - MAX_PAGES })}
+        <p className="text-sm text-[#a07850] text-center py-2">
+          {t(language, 'pdfMorePages', { n: totalPages - MAX_PAGES })}{' '}
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#c17f3a] hover:text-[#7c4a1e] underline"
+          >
+            {t(language, 'openPdf')}
+          </a>
         </p>
       )}
     </div>
