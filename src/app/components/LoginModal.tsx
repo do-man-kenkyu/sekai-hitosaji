@@ -4,6 +4,19 @@ import { signIn, signUp, resendConfirmationEmail } from '../../lib/auth';
 import { PREFECTURES } from '../types';
 import { getTermsSections, getPrivacySections, CONTACT_EMAIL } from '../legalContent';
 import { Language, t } from '../i18n/translations';
+import { calculateAge } from '../utils/age';
+
+// 登録できる最低年齢
+const MIN_AGE = 15;
+
+// 入力欄で選べる最も新しい生年月日（= ちょうど MIN_AGE 歳になる日）。
+// toISOString() はUTCに変換されて日付が1日ずれることがあるため、
+// 現地時間のまま組み立てる。
+function maxAllowedBirthdate(): string {
+  const now = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${now.getFullYear() - MIN_AGE}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
 
 const TASTE_BADGES = [
   '辛党','甘党','塩味好き','酸味好き','苦味好き','旨味好き',
@@ -78,6 +91,10 @@ export function LoginModal({ onClose, onSuccess, language = 'ja' }: Props) {
     if (!nickname.trim()) { setError('ニックネームを入力してください'); return; }
     if (!fullName.trim()) { setError('氏名を入力してください'); return; }
     if (!birthdate) { setError('生年月日を入力してください'); return; }
+    if (calculateAge(birthdate) < MIN_AGE) {
+      setError(`${MIN_AGE}歳未満の方はご登録いただけません`);
+      return;
+    }
     if (password.length < 6) { setError('パスワードは6文字以上で入力してください'); return; }
     if (!agreedToTerms) { setError('利用規約に同意してください'); return; }
     setLoading(true);
@@ -243,11 +260,13 @@ export function LoginModal({ onClose, onSuccess, language = 'ja' }: Props) {
                 <div>
                   <label className="block text-sm font-semibold mb-1">生年月日 <span className="text-orange-500">*</span></label>
                   <input type="date" value={birthdate} onChange={e => setBirthdate(e.target.value)}
-                    max={new Date().toISOString().slice(0, 10)}
+                    max={maxAllowedBirthdate()}
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-orange-400"
                     required
                   />
-                  <p className="text-xs text-gray-400 mt-1">年齢は自動計算されます。登録後の変更はできません。</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {MIN_AGE}歳以上の方がご登録いただけます。年齢は自動計算され、登録後の変更はできません。
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-1">性別</label>
