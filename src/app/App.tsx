@@ -115,7 +115,9 @@ export default function App() {
           localStorage.setItem(originalDataKey, JSON.stringify(condiments));
         }
 
-        const translationCacheKey = 'condimentsTranslationCache';
+        // 以前のキャッシュには翻訳済みの category / purchaseLocation が入っており、
+        // そのまま使うとカテゴリの絞り込みが0件になる。キー名を変えて作り直す。
+        const translationCacheKey = 'condimentsTranslationCache_v2';
         const cachedTranslations = localStorage.getItem(translationCacheKey);
         let translationCache: Record<string, any> = {};
 
@@ -134,13 +136,17 @@ export default function App() {
             }
 
             // Translate all fields using Google Translate API
+            //
+            // category と purchaseLocation は翻訳しない。これらは
+            // CATEGORY_KEYS / PURCHASE_LOCATION_KEYS の「キー」として使われており、
+            // 日本語のままでないと表示用の訳語を引けず、カテゴリの絞り込みにも
+            // 一致しなくなる（英語にするとカテゴリを押しても0件になっていた）。
+            // 画面に出すときは t(language, CATEGORY_KEYS[...]) で訳される。
             try {
               const translationsToFetch = [
                 translateText(condiment.name, 'en'),
-                translateText(condiment.category, 'en'),
                 translateText(condiment.description, 'en'),
                 translateText(condiment.origin, 'en'),
-                translateText(condiment.purchaseLocation, 'en'),
                 translateText(condiment.postedBy.nickname, 'en'),
                 ...condiment.postedBy.tasteBadges.map(badge => translateText(badge, 'en')),
                 ...condiment.recommendedDishes.map(dish => translateText(dish, 'en'))
@@ -149,20 +155,16 @@ export default function App() {
               const results = await Promise.all(translationsToFetch);
 
               const translatedName = results[0];
-              const translatedCategory = results[1];
-              const translatedDescription = results[2];
-              const translatedOrigin = results[3];
-              const translatedPurchaseLocation = results[4];
-              const translatedNickname = results[5];
-              const translatedBadges = results.slice(6, 6 + condiment.postedBy.tasteBadges.length);
-              const translatedDishes = results.slice(6 + condiment.postedBy.tasteBadges.length);
+              const translatedDescription = results[1];
+              const translatedOrigin = results[2];
+              const translatedNickname = results[3];
+              const translatedBadges = results.slice(4, 4 + condiment.postedBy.tasteBadges.length);
+              const translatedDishes = results.slice(4 + condiment.postedBy.tasteBadges.length);
 
               const translatedFields = {
                 name: translatedName,
-                category: translatedCategory,
                 description: translatedDescription,
                 origin: translatedOrigin,
-                purchaseLocation: translatedPurchaseLocation,
                 recommendedDishes: translatedDishes,
                 postedBy: {
                   ...condiment.postedBy,
@@ -1191,11 +1193,40 @@ export default function App() {
         )}
 
         {activeTab === 'search' && (
-          <CategoryGrid
-            selectedCategory={filterCategory}
-            onSelectCategory={setFilterCategory}
-            language={language}
-          />
+          filterCategory === 'すべて' ? (
+            <CategoryGrid
+              selectedCategory={filterCategory}
+              onSelectCategory={setFilterCategory}
+              language={language}
+            />
+          ) : (
+            // ホームでカテゴリを選んで来た場合、ここでカテゴリ一覧を挟むと
+            // 「もう一度選び直し」に見えてしまうので、選択中のカテゴリだけ出して
+            // すぐ下に結果を並べる。
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#fdf5ea] border border-[#e2d5c0] flex items-center justify-center p-1 flex-shrink-0">
+                <CategoryIllustration category={filterCategory} className="w-full h-full" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-base font-bold text-[#3d1f00] truncate">
+                  {CATEGORY_KEYS[filterCategory]
+                    ? t(language, CATEGORY_KEYS[filterCategory])
+                    : filterCategory}
+                </p>
+                <p className="text-xs text-[#a07850]">
+                  {language === 'ja'
+                    ? `${filteredAggregated.length}件`
+                    : `${filteredAggregated.length} items`}
+                </p>
+              </div>
+              <button
+                onClick={() => setFilterCategory('すべて')}
+                className="ml-auto flex-shrink-0 px-3 py-2 text-xs rounded-xl border border-[#c17f3a] text-[#7c4a1e] hover:bg-[#fdf5ea] transition-colors"
+              >
+                {t(language, 'changeCategory')}
+              </button>
+            </div>
+          )
         )}
 
         {activeTab !== 'trends' && committedSearch && filteredAggregated.length > 0 && (
