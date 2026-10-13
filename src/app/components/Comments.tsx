@@ -208,7 +208,7 @@ export function Comments({ condimentId, currentUser, language }: Props) {
             <button
               type="submit"
               disabled={submitting || !newComment.trim()}
-              className="bg-orange-500 hover:bg-orange-600 disabled:opacity-40 text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
+              className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg flex items-center gap-1 text-sm"
             >
               {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
             </button>

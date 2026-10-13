@@ -223,7 +223,7 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                   <button
                     onClick={handleSave}
                     disabled={!editForm.nickname || !editForm.prefecture || !editForm.city || editForm.tasteBadges.length === 0}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-[#7c4a1e] text-white text-sm rounded-lg hover:bg-[#3d1f00] disabled:opacity-40 transition-colors"
+                    className="flex items-center gap-1 px-3 py-1.5 bg-[#7c4a1e] text-white text-sm rounded-lg hover:bg-[#3d1f00] transition-colors"
                   >
                     <Check size={14} />
                     {language === 'ja' ? '保存' : 'Save'}

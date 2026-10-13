@@ -125,7 +125,7 @@ export function ContactModal({ onClose, language, currentUser }: Props) {
 
             <button
               type="submit" disabled={loading}
-              className="w-full bg-[#7c4a1e] hover:bg-[#3d1f00] disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-[#7c4a1e] hover:bg-[#3d1f00] text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               {loading && <Loader2 size={16} className="animate-spin" />}
               {t(language, 'send')}

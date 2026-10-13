@@ -385,7 +385,7 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment, messa
                 key={i}
                 onClick={() => handleSendMessage(q)}
                 disabled={isTyping}
-                className="flex-shrink-0 px-2.5 py-1 bg-[#f5ede0] hover:bg-[#fdf5ea] text-[#7c4a1e] hover:text-[#3d1f00] text-xs rounded-full transition-colors border border-[#e2d5c0] hover:border-[#c17f3a] disabled:opacity-40"
+                className="flex-shrink-0 px-2.5 py-1 bg-[#f5ede0] hover:bg-[#fdf5ea] text-[#7c4a1e] hover:text-[#3d1f00] text-xs rounded-full transition-colors border border-[#e2d5c0] hover:border-[#c17f3a]"
               >
                 {q}
               </button>
@@ -399,12 +399,12 @@ export function ChatPage({ onClose, language, condiments, onViewCondiment, messa
               onKeyPress={handleKeyPress}
               disabled={isTyping}
               placeholder={t(language, 'chatPlaceholder')}
-              className="flex-1 px-3.5 py-2.5 border border-[#e2d5c0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white text-[#3d1f00] text-sm placeholder-[#a07850] disabled:opacity-60"
+              className="flex-1 px-3.5 py-2.5 border border-[#e2d5c0] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#c17f3a] bg-white text-[#3d1f00] text-sm placeholder-[#a07850]"
             />
             <button
               onClick={() => handleSendMessage()}
               disabled={!inputText.trim() || isTyping}
-              className="px-3.5 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] transition-colors flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+              className="px-3.5 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] transition-colors flex items-center gap-1 shadow-sm"
             >
               <Send size={15} />
             </button>

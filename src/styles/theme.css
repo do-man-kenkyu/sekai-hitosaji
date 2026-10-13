@@ -196,4 +196,24 @@
   .safe-area-bottom {
     padding-bottom: calc(19px + env(safe-area-inset-bottom, 0px));
   }
+
+  /* 押せないボタンを一目で分かるようにする。
+     これまでは画面ごとに透明度40%・50%・60%とばらばらで、カーソルも
+     大半が変わらなかったため、「押せるのか押せないのか微妙」な状態だった。
+     色を抜いてグレーにし、カーソルも変えて、押せないことを明確にする。
+     @layer base に置いているので、個別のTailwindクラスがあればそちらが優先される。 */
+  button:disabled,
+  button[disabled],
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    filter: grayscale(100%);
+    opacity: 0.45;
+  }
+
+  /* 押せるボタンは指のカーソルにする（押せるものとの差を分かりやすくする） */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
 }

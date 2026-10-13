@@ -187,7 +187,7 @@ export function CombinationPage({ onClose, language }: CombinationPageProps) {
               <button
                 onClick={handleCombine}
                 disabled={!condimentA || !condimentB || condimentA === condimentB}
-                className="w-full mt-4 py-3 bg-[#7c4a1e] text-white rounded-xl font-medium hover:bg-[#3d1f00] transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+                className="w-full mt-4 py-3 bg-[#7c4a1e] text-white rounded-xl font-medium hover:bg-[#3d1f00] transition-colors flex items-center justify-center gap-2 shadow-sm"
               >
                 <Sparkles size={16} />
                 {t(language, 'combineAction')}

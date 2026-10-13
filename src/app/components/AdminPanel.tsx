@@ -215,7 +215,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
       onClick={onClick}
       disabled={downloading !== null}
       title={t(language, 'downloadHint')}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-[#c17f3a] text-[#7c4a1e] hover:bg-[#fdf5ea] disabled:opacity-40 flex-shrink-0"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-[#c17f3a] text-[#7c4a1e] hover:bg-[#fdf5ea] flex-shrink-0"
     >
       {downloading === busyKey
         ? <><Loader2 size={13} className="animate-spin" />{t(language, 'downloadPreparing')}</>
@@ -726,7 +726,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                   <button
                     type="submit"
                     disabled={articleSaving || pdfUploading || imageUploading || !articleForm.title.trim()}
-                    className="bg-[#7c4a1e] hover:bg-[#3d1f00] disabled:opacity-40 text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
+                    className="bg-[#7c4a1e] hover:bg-[#3d1f00] text-white px-4 py-2 rounded-lg text-sm flex items-center gap-1.5"
                   >
                     {articleSaving && <Loader2 size={14} className="animate-spin" />}
                     {t(language, 'articleSave')}

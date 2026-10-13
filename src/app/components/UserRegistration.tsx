@@ -167,7 +167,7 @@ export function UserRegistration({ onRegister, onClose, language }: UserRegistra
                   type="button"
                   disabled={!agreedToTerms}
                   onClick={() => setStep('form')}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] disabled:bg-[#e2d5c0] disabled:text-[#a07850] disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] disabled:bg-[#e2d5c0] disabled:text-[#a07850] transition-colors text-sm font-medium"
                 >
                   {language === 'ja' ? '同意して次へ' : 'Agree & Continue'}
                   <ChevronRight size={16} />
@@ -301,7 +301,7 @@ export function UserRegistration({ onRegister, onClose, language }: UserRegistra
               <button
                 type="submit"
                 disabled={!formData.nickname || !formData.email || !formData.age || !formData.prefecture || !formData.city || selectedBadges.length === 0}
-                className="flex-1 px-4 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] disabled:bg-[#e2d5c0] disabled:text-[#a07850] disabled:cursor-not-allowed transition-colors text-sm font-medium"
+                className="flex-1 px-4 py-2.5 bg-[#7c4a1e] text-white rounded-xl hover:bg-[#3d1f00] disabled:bg-[#e2d5c0] disabled:text-[#a07850] transition-colors text-sm font-medium"
               >
                 {t(language, 'register')}
               </button>

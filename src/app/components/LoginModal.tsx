@@ -161,7 +161,7 @@ export function LoginModal({ onClose, onSuccess, language = 'ja' }: Props) {
               <button
                 onClick={handleResend}
                 disabled={resendState === 'sending'}
-                className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-[#c17f3a] text-[#7c4a1e] rounded-xl hover:bg-[#fdf5ea] disabled:opacity-50 transition-colors text-sm font-medium"
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 border border-[#c17f3a] text-[#7c4a1e] rounded-xl hover:bg-[#fdf5ea] transition-colors text-sm font-medium"
               >
                 {resendState === 'sending'
                   ? <Loader2 size={16} className="animate-spin" />
@@ -368,7 +368,7 @@ export function LoginModal({ onClose, onSuccess, language = 'ja' }: Props) {
 
           <button
             type="submit" disabled={loading || (mode === 'signup' && !agreedToTerms)}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={16} className="animate-spin" />}
             {mode === 'login' ? 'ログイン' : '登録する'}
