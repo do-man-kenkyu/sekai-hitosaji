@@ -1526,6 +1526,8 @@ export default function App() {
           onViewUser={handleViewUser}
           language={language}
           currentUser={currentUser}
+          onFilterByOrigin={(origin) => showCondimentsBy('origin', origin)}
+          onFilterByPurchase={(loc) => showCondimentsBy('purchase', loc)}
         />
       )}
 

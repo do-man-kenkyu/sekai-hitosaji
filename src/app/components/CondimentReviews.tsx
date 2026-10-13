@@ -10,9 +10,12 @@ interface CondimentReviewsProps {
   onViewUser: (userId: string, nickname: string) => void;
   language: Language;
   currentUser: UserType | null;
+  // 産地・購入場所を押したとき、同じ条件の調味料一覧へ移動する
+  onFilterByOrigin?: (origin: string) => void;
+  onFilterByPurchase?: (purchaseLocation: string) => void;
 }
 
-export function CondimentReviews({ aggregated, onClose, onViewUser, language, currentUser }: CondimentReviewsProps) {
+export function CondimentReviews({ aggregated, onClose, onViewUser, language, currentUser, onFilterByOrigin, onFilterByPurchase }: CondimentReviewsProps) {
   const locale = language === 'ja' ? 'ja-JP' : 'en-US';
 
   return (
@@ -183,16 +186,26 @@ export function CondimentReviews({ aggregated, onClose, onViewUser, language, cu
                       </div>
                     )}
 
-                    {/* Meta tags */}
+                    {/* Meta tags
+                        枠付きで押せそうに見えるため、実際に押せるようにしてある。
+                        押すと同じ購入場所・同じ産地の調味料一覧へ移動する。 */}
                     <div className="flex flex-wrap gap-1.5">
-                      <span className="flex items-center gap-1 px-2.5 py-1 bg-[#f5ede0] text-[#7c4a1e] text-[10px] rounded-lg border border-[#e8d5b0]">
+                      <button
+                        type="button"
+                        onClick={() => onFilterByPurchase?.(post.purchaseLocation)}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-[#f5ede0] text-[#7c4a1e] text-[10px] rounded-lg border border-[#e8d5b0] hover:bg-[#fdf5ea] hover:border-[#c17f3a] transition-colors"
+                      >
                         <ShoppingBag size={10} />
                         {t(language, PURCHASE_LOCATION_KEYS[post.purchaseLocation])}
-                      </span>
-                      <span className="flex items-center gap-1 px-2.5 py-1 bg-[#f5ede0] text-[#7c4a1e] text-[10px] rounded-lg border border-[#e8d5b0]">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onFilterByOrigin?.(post.origin)}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-[#f5ede0] text-[#7c4a1e] text-[10px] rounded-lg border border-[#e8d5b0] hover:bg-[#fdf5ea] hover:border-[#c17f3a] transition-colors"
+                      >
                         <MapPin size={10} />
                         {post.origin}
-                      </span>
+                      </button>
                     </div>
 
                     {/* Taste radar (collapsible) */}
