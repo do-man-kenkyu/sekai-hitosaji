@@ -72,6 +72,9 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
   });
   const [recommendedDishes, setRecommendedDishes] = useState<string[]>(editingCondiment?.recommendedDishes ?? []);
   const [newDish, setNewDish] = useState('');
+  // 必須項目が足りないときの案内。以前は条件を満たさないと何も起きず、
+  // 投稿ボタンが壊れているように見えていた。
+  const [formError, setFormError] = useState('');
   const [pairingCondiments, setPairingCondiments] = useState<string[]>(editingCondiment?.pairingCondiments ?? []);
   const [newPairing, setNewPairing] = useState('');
   const [showPairingPicker, setShowPairingPicker] = useState(false);
@@ -97,16 +100,32 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
     const finalPairings = pendingPairing && !pairingCondiments.includes(pendingPairing)
       ? [...pairingCondiments, pendingPairing]
       : pairingCondiments;
-    if (formData.name && formData.description && formData.origin && formData.imageUrl) {
-      onAdd({
-        ...formData,
-        dishImageUrl: formData.dishImageUrl || undefined,
-        recommendedDishes: finalDishes,
-        pairingCondiments: finalPairings,
-        tasteProfile
-      });
-      onClose();
+    // 足りない項目があれば、どれが足りないかを具体的に伝える
+    const missing: string[] = [];
+    if (!formData.name) missing.push(t(language, 'condimentName'));
+    if (!formData.description) missing.push(t(language, 'description'));
+    if (!formData.origin) missing.push(t(language, 'origin'));
+    if (!formData.imageUrl) missing.push(t(language, 'condimentImage'));
+    if (finalDishes.length === 0) missing.push(t(language, 'recommendedDishesLabel'));
+
+    if (missing.length > 0) {
+      setFormError(
+        language === 'ja'
+          ? `次の項目を入力してください：${missing.join('、')}`
+          : `Please fill in: ${missing.join(', ')}`
+      );
+      return;
     }
+
+    setFormError('');
+    onAdd({
+      ...formData,
+      dishImageUrl: formData.dishImageUrl || undefined,
+      recommendedDishes: finalDishes,
+      pairingCondiments: finalPairings,
+      tasteProfile
+    });
+    onClose();
   };
 
   const addDish = () => {
@@ -379,7 +398,7 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">{t(language, 'recommendedDishesLabel')}</label>
+            <label className="block text-sm font-medium mb-1">{t(language, 'recommendedDishesLabel')} *</label>
             <div className="space-y-2">
               <div className="flex gap-2">
                 <input
@@ -648,6 +667,13 @@ export function AddCondimentForm({ onAdd, onClose, language, condiments, userId,
               {isEditing ? (language === 'ja' ? '更新する' : 'Update') : t(language, 'add')}
             </button>
           </div>
+
+          {/* 投稿できない理由をここに出す */}
+          {formError && (
+            <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {formError}
+            </p>
+          )}
         </form>
       </div>
     </div>
