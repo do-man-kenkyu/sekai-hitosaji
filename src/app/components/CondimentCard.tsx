@@ -10,9 +10,11 @@ interface CondimentCardProps {
   onToggleBookmark: (condimentId: string) => void;
   likedCondiments: string[];
   bookmarkedCondiments: string[];
+  // 産地を押したとき、同じ産地の調味料一覧へ移動する
+  onFilterByOrigin?: (origin: string) => void;
 }
 
-export function CondimentCard({ aggregated, onViewReviews, language, onToggleLike, onToggleBookmark, likedCondiments, bookmarkedCondiments }: CondimentCardProps) {
+export function CondimentCard({ aggregated, onViewReviews, language, onToggleLike, onToggleBookmark, likedCondiments, bookmarkedCondiments, onFilterByOrigin }: CondimentCardProps) {
   const latestPost = aggregated.posts[0];
   const isLiked = likedCondiments.includes(latestPost.id);
   const isBookmarked = bookmarkedCondiments.includes(latestPost.id);
@@ -62,10 +64,18 @@ export function CondimentCard({ aggregated, onViewReviews, language, onToggleLik
         {/* Description */}
         <p className="text-[#5c3d11] text-xs mb-1.5 line-clamp-2 leading-relaxed">{latestPost.description}</p>
 
-        {/* Origin */}
+        {/* Origin
+            押すと同じ産地の調味料一覧へ。カード自体もクリックできるので、
+            そちらが同時に反応しないよう stopPropagation している。 */}
         <div className="flex items-center gap-1 mb-2">
           <MapPin size={11} className="text-[#c17f3a] flex-shrink-0" />
-          <span className="text-[10px] text-[#a07850]">{aggregated.origin}</span>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onFilterByOrigin?.(aggregated.origin); }}
+            className="text-[10px] text-[#a07850] underline decoration-dotted underline-offset-2 hover:text-[#7c4a1e]"
+          >
+            {aggregated.origin}
+          </button>
         </div>
 
         {/* Dishes */}

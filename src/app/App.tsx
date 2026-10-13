@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Search, User as UserIcon, Shield, MessageCircle, Home, Grid, TrendingUp, MapPin, Users, Sparkles, Trophy, Menu, X as XIcon, Star, ChevronLeft, Mail, ScrollText, ShieldCheck } from 'lucide-react';
+import { Plus, Search, User as UserIcon, Shield, MessageCircle, Home, Grid, TrendingUp, MapPin, Users, Sparkles, Trophy, Menu, X as XIcon, Star, ChevronLeft, Mail, ScrollText, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { CondimentCard } from './components/CondimentCard';
 import { AddCondimentForm } from './components/AddCondimentForm';
 import { CondimentReviews } from './components/CondimentReviews';
@@ -27,7 +27,7 @@ import { CategoryIllustration } from './components/CategoryIllustration';
 import { withBase } from './assetPath';
 import { Condiment, User, AggregatedCondiment, ChatMessage } from './types';
 import { aggregateCondiments } from './utils/aggregateCondiments';
-import { Language, t, CATEGORY_KEYS } from './i18n/translations';
+import { Language, t, CATEGORY_KEYS, PURCHASE_LOCATION_KEYS } from './i18n/translations';
 import { supabase } from '../lib/supabase';
 import { getProfile, signOut, updateProfile } from '../lib/auth';
 import { fetchCondiments, insertCondiment, updateCondiment, deleteCondiment, fetchLikedIds, toggleLike, fetchBookmarkedIds, toggleBookmark, fetchAllUsers } from '../lib/database';
@@ -68,6 +68,9 @@ export default function App() {
   const [searchTerm, setSearchTerm] = useState('');
   const [committedSearch, setCommittedSearch] = useState('');
   const [filterCategory, setFilterCategory] = useState('すべて');
+  // 産地・購入場所での絞り込み（カードや詳細画面のそれぞれの表示を押すと設定される）
+  const [filterOrigin, setFilterOrigin] = useState<string | null>(null);
+  const [filterPurchase, setFilterPurchase] = useState<string | null>(null);
   const [likedCondiments, setLikedCondiments] = useState<string[]>([]);
   const [bookmarkedCondiments, setBookmarkedCondiments] = useState<string[]>([]);
   // AIチャットの履歴。ChatPage ではなくここで持つことで、チャットを閉じても消えない。
@@ -743,7 +746,29 @@ export default function App() {
       setSearchTerm('');
       setCommittedSearch('');
       setFilterCategory('すべて');
+      setFilterOrigin(null);
+      setFilterPurchase(null);
     }
+  };
+
+  // 産地・購入場所の表示を押したときの絞り込み。
+  // 絞り込みは一度にひとつだけにして、開いているモーダルは閉じ、一覧へ移動する。
+  const showCondimentsBy = (kind: 'origin' | 'purchase', value: string) => {
+    setFilterCategory('すべて');
+    setFilterOrigin(kind === 'origin' ? value : null);
+    setFilterPurchase(kind === 'purchase' ? value : null);
+    setSearchTerm('');
+    setCommittedSearch('');
+    setSelectedCondiment(null);
+    setSelectedAggregated(null);
+    setSelectedUserPosts(null);
+    setShowMyPage(false);
+    setActiveTab('search');
+  };
+
+  const clearExtraFilters = () => {
+    setFilterOrigin(null);
+    setFilterPurchase(null);
   };
 
   // カタカナ → ひらがな
@@ -842,18 +867,26 @@ export default function App() {
     const keywords = committedSearch.toLowerCase().trim().split(/\s+/).filter(Boolean);
     const matchesCategory = (agg: AggregatedCondiment) =>
       filterCategory === 'すべて' || agg.category === filterCategory;
+    const matchesOrigin = (agg: AggregatedCondiment) =>
+      !filterOrigin || agg.origin === filterOrigin;
+    // 購入場所は投稿ごとの情報なので、ひとつでも一致する投稿があれば対象にする
+    const matchesPurchase = (agg: AggregatedCondiment) =>
+      !filterPurchase || agg.posts.some(p => p.purchaseLocation === filterPurchase);
+
+    const matchesFilters = (agg: AggregatedCondiment) =>
+      matchesCategory(agg) && matchesOrigin(agg) && matchesPurchase(agg);
 
     if (keywords.length === 0) {
-      return aggregatedCondiments.filter(matchesCategory);
+      return aggregatedCondiments.filter(matchesFilters);
     }
 
     return aggregatedCondiments
       .filter(agg => {
-        if (!matchesCategory(agg)) return false;
+        if (!matchesFilters(agg)) return false;
         return scoreCondiment(agg, keywords) > 0;
       })
       .sort((a, b) => scoreCondiment(b, keywords) - scoreCondiment(a, keywords));
-  }, [aggregatedCondiments, committedSearch, filterCategory]);
+  }, [aggregatedCondiments, committedSearch, filterCategory, filterOrigin, filterPurchase]);
 
   return (
     <div className="min-h-screen bg-[#faf7f2]">
@@ -1193,37 +1226,61 @@ export default function App() {
         )}
 
         {activeTab === 'search' && (
-          filterCategory === 'すべて' ? (
+          (filterCategory === 'すべて' && !filterOrigin && !filterPurchase) ? (
             <CategoryGrid
               selectedCategory={filterCategory}
               onSelectCategory={setFilterCategory}
               language={language}
             />
           ) : (
-            // ホームでカテゴリを選んで来た場合、ここでカテゴリ一覧を挟むと
-            // 「もう一度選び直し」に見えてしまうので、選択中のカテゴリだけ出して
-            // すぐ下に結果を並べる。
+            // カテゴリ・産地・購入場所のどれかで絞り込み中は、カテゴリ一覧を挟まず
+            // 「何で絞り込んでいるか」だけ示して、すぐ下に結果を並べる。
             <div className="flex items-center gap-3 mb-5">
               <div className="w-11 h-11 rounded-xl overflow-hidden bg-[#fdf5ea] border border-[#e2d5c0] flex items-center justify-center p-1 flex-shrink-0">
-                <CategoryIllustration category={filterCategory} className="w-full h-full" />
+                {filterOrigin ? (
+                  <MapPin size={20} className="text-[#c17f3a]" />
+                ) : filterPurchase ? (
+                  <ShoppingBag size={20} className="text-[#c17f3a]" />
+                ) : (
+                  <CategoryIllustration category={filterCategory} className="w-full h-full" />
+                )}
               </div>
               <div className="min-w-0">
-                <p className="text-base font-bold text-[#3d1f00] truncate">
-                  {CATEGORY_KEYS[filterCategory]
-                    ? t(language, CATEGORY_KEYS[filterCategory])
-                    : filterCategory}
+                <p className="text-[10px] font-bold text-[#a07850] uppercase tracking-wide">
+                  {filterOrigin
+                    ? t(language, 'origin')
+                    : filterPurchase
+                      ? t(language, 'purchaseLocation')
+                      : t(language, 'browseByCategory')}
                 </p>
-                <p className="text-xs text-[#a07850]">
-                  {language === 'ja'
-                    ? `${filteredAggregated.length}件`
-                    : `${filteredAggregated.length} items`}
+                <p className="text-base font-bold text-[#3d1f00] truncate">
+                  {filterOrigin
+                    ? filterOrigin
+                    : filterPurchase
+                      ? t(language, PURCHASE_LOCATION_KEYS[filterPurchase])
+                      : CATEGORY_KEYS[filterCategory]
+                        ? t(language, CATEGORY_KEYS[filterCategory])
+                        : filterCategory}
+                  <span className="ml-2 text-xs font-normal text-[#a07850]">
+                    {language === 'ja'
+                      ? `${filteredAggregated.length}件`
+                      : `${filteredAggregated.length} items`}
+                  </span>
                 </p>
               </div>
               <button
-                onClick={() => setFilterCategory('すべて')}
+                onClick={() => {
+                  if (filterOrigin || filterPurchase) {
+                    clearExtraFilters();
+                  } else {
+                    setFilterCategory('すべて');
+                  }
+                }}
                 className="ml-auto flex-shrink-0 px-3 py-2 text-xs rounded-xl border border-[#c17f3a] text-[#7c4a1e] hover:bg-[#fdf5ea] transition-colors"
               >
-                {t(language, 'changeCategory')}
+                {filterOrigin || filterPurchase
+                  ? t(language, 'clearFilter')
+                  : t(language, 'changeCategory')}
               </button>
             </div>
           )
@@ -1282,6 +1339,7 @@ export default function App() {
                 onToggleBookmark={handleToggleBookmark}
                 likedCondiments={likedCondiments}
                 bookmarkedCondiments={bookmarkedCondiments}
+                onFilterByOrigin={(origin) => showCondimentsBy('origin', origin)}
               />
             ))}
           </div>
@@ -1416,10 +1474,9 @@ export default function App() {
             onClick={() => setShowChat(true)}
             className="flex flex-col items-center gap-1 px-3 py-2.5 text-[#b09070] hover:text-[#7c4a1e] transition-colors"
           >
-            <div className="relative">
-              <MessageCircle size={20} />
-              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-[#c17f3a] rounded-full"></span>
-            </div>
+            {/* 以前はアイコン右上に装飾のオレンジ色の点があったが、
+                未読通知があるように見えるため削除した */}
+            <MessageCircle size={20} />
             <span className="text-[10px] font-medium">{t(language, 'aiChat')}</span>
           </button>
 
@@ -1492,6 +1549,8 @@ export default function App() {
           isLiked={likedCondiments.includes(selectedCondiment.id)}
           isBookmarked={bookmarkedCondiments.includes(selectedCondiment.id)}
           currentUser={currentUser}
+          onFilterByOrigin={(origin) => showCondimentsBy('origin', origin)}
+          onFilterByPurchase={(loc) => showCondimentsBy('purchase', loc)}
         />
       )}
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Star, MapPin, Globe, Heart, Bookmark, ChevronLeft, Utensils, ShoppingBag, User, Sparkles } from 'lucide-react';
+import { X, Star, MapPin, Globe, Heart, Bookmark, ChevronLeft, ChevronRight, Utensils, ShoppingBag, User, Sparkles } from 'lucide-react';
 import { Condiment, User as UserType } from '../types';
 import { TasteRadarChart } from './TasteRadarChart';
 import { TranslateModal } from './TranslateModal';
@@ -15,9 +15,12 @@ interface CondimentDetailProps {
   isLiked: boolean;
   isBookmarked: boolean;
   currentUser?: UserType | null;
+  // 産地・購入場所を押したとき、同じ条件の調味料一覧へ移動する
+  onFilterByOrigin?: (origin: string) => void;
+  onFilterByPurchase?: (purchaseLocation: string) => void;
 }
 
-export function CondimentDetail({ condiment, onClose, language, onToggleLike, onToggleBookmark, isLiked, isBookmarked, currentUser }: CondimentDetailProps) {
+export function CondimentDetail({ condiment, onClose, language, onToggleLike, onToggleBookmark, isLiked, isBookmarked, currentUser, onFilterByOrigin, onFilterByPurchase }: CondimentDetailProps) {
   const [showTranslate, setShowTranslate] = useState(false);
   const [translateContent, setTranslateContent] = useState({ title: '', text: '' });
   const [selectedImage, setSelectedImage] = useState(condiment.imageUrl);
@@ -199,22 +202,38 @@ export function CondimentDetail({ condiment, onClose, language, onToggleLike, on
             </div>
           </div>
 
-          {/* Details grid */}
+          {/* Details grid
+              押すと同じ購入場所・同じ産地の調味料一覧に移動する。
+              押せることが分かるよう、矢印と枠線の反応を付けている。 */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white rounded-xl border border-[#e2d5c0] p-3">
+            <button
+              type="button"
+              onClick={() => onFilterByPurchase?.(condiment.purchaseLocation)}
+              className="text-left bg-white rounded-xl border border-[#e2d5c0] p-3 hover:border-[#c17f3a] hover:bg-[#fdf5ea] transition-colors"
+            >
               <div className="flex items-center gap-1.5 mb-1">
                 <ShoppingBag size={12} className="text-[#c17f3a]" />
                 <span className="text-[10px] font-bold text-[#7c4a1e] uppercase tracking-wide">{t(language, 'purchaseLocation')}</span>
               </div>
-              <p className="text-sm font-medium text-[#3d1f00]">{t(language, PURCHASE_LOCATION_KEYS[condiment.purchaseLocation])}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-[#e2d5c0] p-3">
+              <p className="text-sm font-medium text-[#3d1f00] flex items-center justify-between gap-1">
+                {t(language, PURCHASE_LOCATION_KEYS[condiment.purchaseLocation])}
+                <ChevronRight size={14} className="text-[#c17f3a] flex-shrink-0" />
+              </p>
+            </button>
+            <button
+              type="button"
+              onClick={() => onFilterByOrigin?.(condiment.origin)}
+              className="text-left bg-white rounded-xl border border-[#e2d5c0] p-3 hover:border-[#c17f3a] hover:bg-[#fdf5ea] transition-colors"
+            >
               <div className="flex items-center gap-1.5 mb-1">
                 <MapPin size={12} className="text-[#c17f3a]" />
                 <span className="text-[10px] font-bold text-[#7c4a1e] uppercase tracking-wide">{t(language, 'origin')}</span>
               </div>
-              <p className="text-sm font-medium text-[#3d1f00]">{condiment.origin}</p>
-            </div>
+              <p className="text-sm font-medium text-[#3d1f00] flex items-center justify-between gap-1">
+                {condiment.origin}
+                <ChevronRight size={14} className="text-[#c17f3a] flex-shrink-0" />
+              </p>
+            </button>
           </div>
 
           {/* Dish photo */}
