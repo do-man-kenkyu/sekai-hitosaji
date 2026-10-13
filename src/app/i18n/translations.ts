@@ -103,7 +103,7 @@ export const translations = {
     uploadImage: '画像をアップロード',
     dishImageLabel: '料理の画像（任意）',
     recommendedDishesLabel: 'おすすめ料理（カンマ区切り）',
-    recommendedDishesPlaceholder: '例: 刺身、煮物、炒め物',
+    recommendedDishesPlaceholder: '例: 刺身、煮物、炒め物 など',
     tasteProfileLabel: '味覚プロファイル',
     sweetness: '甘味',
     sourness: '酸味',
