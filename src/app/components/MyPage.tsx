@@ -245,7 +245,12 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">{t(language, 'age')}</p>
-                    <p className="font-medium">{user.age}{language === 'ja' ? '歳' : ' years old'}</p>
+                    {/* 生年月日が無い（法人アカウント等）ときに「0歳」と出さない */}
+                    <p className="font-medium">
+                      {user.birthdate
+                        ? `${user.age}${language === 'ja' ? '歳' : ' years old'}`
+                        : (language === 'ja' ? '未登録' : 'Not set')}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">{t(language, 'gender')}</p>
@@ -295,7 +300,9 @@ export function MyPage({ user, posts, likedPosts, bookmarkedPosts, onClose, onVi
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">{t(language, 'age')}</label>
                     <p className="w-full px-3 py-2 text-sm text-gray-500 bg-gray-100 rounded-lg border border-gray-200">
-                      {user.age}{language === 'ja' ? '歳（生年月日は変更できません）' : ' years old (birthdate cannot be changed)'}
+                      {user.birthdate
+                        ? `${user.age}${language === 'ja' ? '歳（生年月日は変更できません）' : ' years old (birthdate cannot be changed)'}`
+                        : (language === 'ja' ? '未登録' : 'Not set')}
                     </p>
                   </div>
                   <div>
