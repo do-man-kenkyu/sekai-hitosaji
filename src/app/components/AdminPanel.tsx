@@ -351,6 +351,41 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
   const openGroupList = (title: string, members: User[], note?: string) =>
     setGroupListView({ title, members, note });
 
+  // 年代グラフの目盛り：年代名と、その真下に「詳細」ボタン（SVGで描く）
+  const renderAgeTick = (props: any) => {
+    const { x, y, payload, width, visibleTicksCount } = props;
+    const group = ageData.find(d => d.label === payload.value);
+    const enabled = !!group && group.members.length > 0;
+    const band = width && visibleTicksCount ? width / visibleTicksCount : 60;
+    const btnW = Math.max(30, Math.min(48, band - 6));
+    const open = () => {
+      if (group && enabled) openGroupList(`${language === 'ja' ? '年代' : 'Age'}：${group.label}`, group.members);
+    };
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text y={14} textAnchor="middle" fontSize={12} fill={group?.unset ? '#6b7280' : '#5c3d20'}>
+          {payload.value}
+        </text>
+        <g
+          transform="translate(0,24)"
+          onClick={open}
+          role="button"
+          aria-disabled={!enabled}
+          style={{ cursor: enabled ? 'pointer' : 'not-allowed' }}
+        >
+          <rect
+            x={-btnW / 2} y={0} width={btnW} height={20} rx={10}
+            fill={enabled ? '#ffffff' : '#f3f4f6'}
+            stroke={enabled ? '#c17f3a' : '#d1d5db'}
+          />
+          <text x={0} y={14} textAnchor="middle" fontSize={btnW < 40 ? 10 : 11} fontWeight={600} fill={enabled ? '#7c4a1e' : '#9ca3af'}>
+            {language === 'ja' ? '詳細 ›' : 'View ›'}
+          </text>
+        </g>
+      </g>
+    );
+  };
+
   // 人数の下に置く「詳細」ボタン。0人のときは押せない。
   const renderDetailButton = (title: string, members: User[], note?: string) => (
     <button
@@ -468,10 +503,17 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                   <h3 className="font-medium text-[#3d1f00] mb-3">
                     {language === 'ja' ? '年代別のユーザー数' : 'Users by age group'}
                   </h3>
-                  <div className="h-52">
+                  <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={ageData} margin={{ top: 20, right: 8, left: -20, bottom: 0 }}>
-                        <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#5c3d20' }} tickLine={false} axisLine={{ stroke: '#e2d5c0' }} />
+                        <XAxis
+                          dataKey="label"
+                          interval={0}
+                          height={56}
+                          tickLine={false}
+                          axisLine={{ stroke: '#e2d5c0' }}
+                          tick={renderAgeTick}
+                        />
                         <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#a07850' }} tickLine={false} axisLine={false} />
                         <Tooltip
                           cursor={{ fill: '#fdf5ea' }}
@@ -496,16 +538,6 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
-                  </div>
-                  {/* 年代ごとの人数と、その下の詳細ボタン */}
-                  <div className="mt-3 pt-3 border-t border-[#e2d5c0] grid grid-cols-4 sm:grid-cols-7 gap-y-3 text-center">
-                    {ageData.map(d => (
-                      <div key={d.label} className="flex flex-col items-center">
-                        <span className={`text-xs ${d.unset ? 'text-gray-500' : 'text-[#5c3d20]'}`}>{d.label}</span>
-                        <span className="text-sm font-bold text-[#3d1f00]">{d.count}{personUnit}</span>
-                        {renderDetailButton(`${language === 'ja' ? '年代' : 'Age'}：${d.label}`, d.members)}
-                      </div>
-                    ))}
                   </div>
                 </div>
 
