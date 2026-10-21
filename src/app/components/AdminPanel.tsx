@@ -29,13 +29,8 @@ type Tab = 'stats' | 'condiments' | 'search' | 'inquiries' | 'articles';
 export function AdminPanel({ users, condiments, onClose, language }: AdminPanelProps) {
   const [tab, setTab] = useState<Tab>('stats');
   const [showUserList, setShowUserList] = useState(false);
-  // グラフ下の詳細表の開閉と、グラフで選んだ区分
-  const [ageDetailOpen, setAgeDetailOpen] = useState(false);
-  const [selectedAgeGroup, setSelectedAgeGroup] = useState<string | null>(null);
-  const [prefDetailOpen, setPrefDetailOpen] = useState(false);
-  const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
-  // 区分ごとのユーザー一覧（グラフ詳細の「一覧で見る」から開く）
-  const [groupListView, setGroupListView] = useState<{ title: string; members: User[] } | null>(null);
+  // 区分ごとのユーザー一覧（各人数の下の「詳細」から開く）
+  const [groupListView, setGroupListView] = useState<{ title: string; members: User[]; note?: string } | null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
 
@@ -352,77 +347,20 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     </>
   );
 
-  // グラフの下に開く詳細表。選んだ区分があればその区分だけを出す。
-  const renderDetail = (
-    rows: { key: string; members: User[]; unset: boolean }[],
-    selected: string | null,
-    onClearSelection: () => void,
-    showCities: boolean,
-  ) => {
-    const visible = selected ? rows.filter(r => r.key === selected) : rows.filter(r => r.members.length > 0);
-    const groupTitle = showCities ? (language === 'ja' ? '地域' : 'Region') : (language === 'ja' ? '年代' : 'Age');
-    return (
-      <div className="mt-3 border-t border-[#e2d5c0] pt-3">
-        {selected && (
-          <div className="flex items-center justify-between mb-2 text-sm">
-            <span className="text-[#7c4a1e]">
-              {language === 'ja' ? `「${selected}」の詳細` : `Details: ${selected}`}
-            </span>
-            <button type="button" onClick={onClearSelection} className="text-[#c17f3a] underline underline-offset-2">
-              {language === 'ja' ? 'すべて表示' : 'Show all'}
-            </button>
-          </div>
-        )}
-        {visible.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4 text-center">
-            {language === 'ja' ? '該当するユーザーはいません' : 'No users'}
-          </p>
-        ) : (
-          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-            {visible.map(row => (
-              <div key={row.key} className="text-sm">
-                <div className="flex items-baseline justify-between gap-2 mb-1">
-                  <span className={`font-medium ${row.unset ? 'text-gray-500' : 'text-[#3d1f00]'}`}>{row.key}</span>
-                  <span className="text-[#5c3d20]">
-                    <span className="font-bold">{row.members.length}{personUnit}</span>
-                    <span className="text-[#a07850] ml-1.5">({percentOf(row.members.length)})</span>
-                  </span>
-                </div>
-                {showCities && row.members.length > 0 && (
-                  <p className="text-xs text-[#a07850] mb-1">{cityBreakdown(row.members)}</p>
-                )}
-                {/* 人数の下：押すとこの区分のユーザーを一覧表で開く */}
-                {row.members.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setGroupListView({ title: `${groupTitle}：${row.key}`, members: row.members })}
-                    className="mt-1 w-full flex items-center justify-between px-3 py-1.5 text-xs text-[#7c4a1e] bg-[#fdf5ea] border border-[#e2d5c0] rounded-lg hover:border-[#c17f3a] transition-colors"
-                  >
-                    <span>
-                      {language === 'ja'
-                        ? `${row.members.length}人のユーザーを一覧で見る`
-                        : `View ${row.members.length} users`}
-                    </span>
-                    <ChevronRight size={14} />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
+  // 区分ごとのユーザー一覧ページを開く（note は市区町村の内訳など補足）
+  const openGroupList = (title: string, members: User[], note?: string) =>
+    setGroupListView({ title, members, note });
 
-  // 「詳しく見る」ボタン（グラフの下に置く）
-  const renderDetailToggle = (open: boolean, onToggle: () => void) => (
+  // 人数の下に置く「詳細」ボタン。0人のときは押せない。
+  const renderDetailButton = (title: string, members: User[], note?: string) => (
     <button
       type="button"
-      onClick={onToggle}
-      className="mt-3 w-full flex items-center justify-center gap-1 py-2 text-sm text-[#7c4a1e] border border-[#e2d5c0] rounded-lg hover:bg-[#fdf5ea] hover:border-[#c17f3a] transition-colors"
+      disabled={members.length === 0}
+      onClick={() => openGroupList(title, members, note)}
+      className="mt-1 inline-flex items-center gap-0.5 px-2.5 py-0.5 text-xs font-medium text-[#7c4a1e] bg-white border border-[#c17f3a] rounded-full hover:bg-[#fdf5ea] transition-colors"
     >
-      {open ? (language === 'ja' ? '詳細を閉じる' : 'Hide details') : (language === 'ja' ? '詳しく見る' : 'View details')}
-      <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+      {language === 'ja' ? '詳細' : 'Details'}
+      <ChevronRight size={12} />
     </button>
   );
 
@@ -502,15 +440,22 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-blue-900 mb-1">{t(language, 'totalUsers')}</h3>
-                  <p className="text-3xl font-bold text-blue-600">{users.length}</p>
+                  <p className="text-3xl font-bold text-blue-600">{users.length}{personUnit}</p>
+                  {renderDetailButton(language === 'ja' ? '全ユーザー' : 'All users', users)}
                 </div>
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-purple-900 mb-2">{t(language, 'gender')}</h3>
-                  <div className="space-y-1 text-sm">
+                  <div className="space-y-2 text-sm">
                     {Object.entries(genderCounts).map(([gender, count]) => (
-                      <div key={gender} className="flex justify-between">
-                        <span>{gender}:</span>
-                        <span className="font-medium">{count}{language === 'ja' ? '人' : ''}</span>
+                      <div key={gender} className="flex justify-between items-start">
+                        <span>{gender}</span>
+                        <div className="flex flex-col items-end">
+                          <span className="font-medium">{count}{personUnit}</span>
+                          {renderDetailButton(
+                            `${t(language, 'gender')}：${gender}`,
+                            users.filter(u => u.gender === gender),
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -518,54 +463,50 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
-                {/* 年代別の人数 */}
+                {/* 年代別の人数（棒を押しても一覧が開く） */}
                 <div className="bg-white border border-[#e2d5c0] rounded-lg p-4">
                   <h3 className="font-medium text-[#3d1f00] mb-3">
                     {language === 'ja' ? '年代別のユーザー数' : 'Users by age group'}
                   </h3>
-                  <div className="h-56">
+                  <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={ageData} margin={{ top: 20, right: 8, left: -20, bottom: 0 }}>
                         <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#5c3d20' }} tickLine={false} axisLine={{ stroke: '#e2d5c0' }} />
                         <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#a07850' }} tickLine={false} axisLine={false} />
                         <Tooltip
                           cursor={{ fill: '#fdf5ea' }}
-                          formatter={(value: number) => [`${value}${language === 'ja' ? '人' : ''}`, language === 'ja' ? '人数' : 'Users']}
+                          formatter={(value: number) => [`${value}${personUnit}`, language === 'ja' ? '人数' : 'Users']}
                         />
                         <Bar
                           dataKey="count"
                           radius={[4, 4, 0, 0]}
                           cursor="pointer"
                           onClick={(entry: any) => {
-                            // 棒を押すと、その年代の詳細を下に開く
                             const label = entry?.label ?? entry?.payload?.label;
-                            if (!label) return;
-                            setSelectedAgeGroup(label);
-                            setAgeDetailOpen(true);
+                            const group = ageData.find(d => d.label === label);
+                            if (group && group.members.length > 0) {
+                              openGroupList(`${language === 'ja' ? '年代' : 'Age'}：${group.label}`, group.members);
+                            }
                           }}
                         >
                           {ageData.map(d => (
-                            <Cell
-                              key={d.label}
-                              fill={d.unset ? '#d6cbb8' : '#7c4a1e'}
-                              fillOpacity={selectedAgeGroup && ageDetailOpen && selectedAgeGroup !== d.label ? 0.35 : 1}
-                            />
+                            <Cell key={d.label} fill={d.unset ? '#d6cbb8' : '#7c4a1e'} />
                           ))}
                           <LabelList dataKey="count" position="top" style={{ fontSize: 12, fill: '#3d1f00' }} />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  {renderDetailToggle(ageDetailOpen, () => {
-                    setAgeDetailOpen(v => !v);
-                    setSelectedAgeGroup(null);
-                  })}
-                  {ageDetailOpen && renderDetail(
-                    ageData.map(d => ({ key: d.label, members: d.members, unset: d.unset })),
-                    selectedAgeGroup,
-                    () => setSelectedAgeGroup(null),
-                    false,
-                  )}
+                  {/* 年代ごとの人数と、その下の詳細ボタン */}
+                  <div className="mt-3 pt-3 border-t border-[#e2d5c0] grid grid-cols-4 sm:grid-cols-7 gap-y-3 text-center">
+                    {ageData.map(d => (
+                      <div key={d.label} className="flex flex-col items-center">
+                        <span className={`text-xs ${d.unset ? 'text-gray-500' : 'text-[#5c3d20]'}`}>{d.label}</span>
+                        <span className="text-sm font-bold text-[#3d1f00]">{d.count}{personUnit}</span>
+                        {renderDetailButton(`${language === 'ja' ? '年代' : 'Age'}：${d.label}`, d.members)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* 都道府県別の人数 */}
@@ -579,41 +520,35 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                       {language === 'ja' ? '登録ユーザーがいません' : 'No registered users'}
                     </p>
                   ) : (
-                    <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
-                      {prefectureGroups.map(([prefecture, members]) => {
-                        const dimmed = prefDetailOpen && selectedPrefecture !== null && selectedPrefecture !== prefecture;
-                        return (
-                          // 行を押すと、その都道府県の詳細を下に開く
-                          <button
-                            key={prefecture}
-                            type="button"
-                            onClick={() => { setSelectedPrefecture(prefecture); setPrefDetailOpen(true); }}
-                            className={`w-full flex items-center gap-2 text-sm rounded px-1 py-0.5 hover:bg-[#fdf5ea] transition-opacity ${dimmed ? 'opacity-40' : ''}`}
-                          >
-                            <span className="w-20 flex-shrink-0 text-left text-[#5c3d20] truncate">{prefecture}</span>
-                            <div className="flex-1 h-4 bg-[#fdf5ea] rounded">
+                    <div className="divide-y divide-[#f0e8da] max-h-96 overflow-y-auto pr-1">
+                      {prefectureGroups.map(([prefecture, members]) => (
+                        <div key={prefecture} className="flex items-start gap-3 py-2 text-sm">
+                          <span className={`w-20 flex-shrink-0 pt-0.5 truncate ${prefecture === unsetLabel ? 'text-gray-500' : 'text-[#5c3d20]'}`}>
+                            {prefecture}
+                          </span>
+                          <div className="flex-1 pt-1.5">
+                            <div className="h-4 bg-[#fdf5ea] rounded">
                               <div
                                 className={`h-4 rounded ${prefecture === unsetLabel ? 'bg-[#d6cbb8]' : 'bg-[#c17f3a]'}`}
                                 style={{ width: `${(members.length / maxPrefectureCount) * 100}%` }}
                               />
                             </div>
-                            <span className="w-10 text-right font-medium text-[#3d1f00]">
+                            <p className="mt-1 text-[11px] text-[#a07850]">{cityBreakdown(members)}</p>
+                          </div>
+                          <div className="w-16 flex-shrink-0 flex flex-col items-end">
+                            <span className="font-bold text-[#3d1f00]">
                               {members.length}{personUnit}
+                              <span className="ml-1 text-[10px] font-normal text-[#a07850]">{percentOf(members.length)}</span>
                             </span>
-                          </button>
-                        );
-                      })}
+                            {renderDetailButton(
+                              `${language === 'ja' ? '地域' : 'Region'}：${prefecture}`,
+                              members,
+                              cityBreakdown(members),
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  )}
-                  {prefectureGroups.length > 0 && renderDetailToggle(prefDetailOpen, () => {
-                    setPrefDetailOpen(v => !v);
-                    setSelectedPrefecture(null);
-                  })}
-                  {prefDetailOpen && renderDetail(
-                    prefectureGroups.map(([prefecture, members]) => ({ key: prefecture, members, unset: prefecture === unsetLabel })),
-                    selectedPrefecture,
-                    () => setSelectedPrefecture(null),
-                    true,
                   )}
                 </div>
               </div>
@@ -622,9 +557,13 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 <h3 className="font-medium text-yellow-900 mb-3">{t(language, 'tasteBadges')} TOP 5</h3>
                 <div className="grid grid-cols-5 gap-2">
                   {topBadges.map(([badge, count]) => (
-                    <div key={badge} className="text-center">
+                    <div key={badge} className="flex flex-col items-center text-center">
                       <div className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full mb-1">{badge}</div>
-                      <p className="text-xs text-gray-600">{count}{language === 'ja' ? '人' : ''}</p>
+                      <p className="text-xs text-gray-600">{count}{personUnit}</p>
+                      {renderDetailButton(
+                        `${t(language, 'tasteBadges')}：${badge}`,
+                        users.filter(u => u.tasteBadges.includes(badge as User['tasteBadges'][number])),
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1055,6 +994,11 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
               </button>
             </div>
             <div className="p-6">
+              {groupListView.note && (
+                <p className="text-sm text-[#7c4a1e] bg-[#fdf5ea] border border-[#e2d5c0] rounded-lg px-3 py-2 mb-4">
+                  {language === 'ja' ? '内訳：' : 'Breakdown: '}{groupListView.note}
+                </p>
+              )}
               {renderUserTable(groupListView.members)}
             </div>
           </div>
