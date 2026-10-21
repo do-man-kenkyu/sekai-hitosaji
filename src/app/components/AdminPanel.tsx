@@ -29,6 +29,11 @@ type Tab = 'stats' | 'condiments' | 'search' | 'inquiries' | 'articles';
 export function AdminPanel({ users, condiments, onClose, language }: AdminPanelProps) {
   const [tab, setTab] = useState<Tab>('stats');
   const [showUserList, setShowUserList] = useState(false);
+  // グラフ下の詳細表の開閉と、グラフで選んだ区分
+  const [ageDetailOpen, setAgeDetailOpen] = useState(false);
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<string | null>(null);
+  const [prefDetailOpen, setPrefDetailOpen] = useState(false);
+  const [selectedPrefecture, setSelectedPrefecture] = useState<string | null>(null);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
 
@@ -262,23 +267,113 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     { label: language === 'ja' ? '60歳〜' : '60+', min: 60, max: Infinity },
   ];
   const ageData = [
-    ...ageGroups.map(g => ({
-      label: g.label,
-      count: users.filter(u => u.birthdate && u.age >= g.min && u.age <= g.max).length,
-      unset: false,
-    })),
-    { label: unsetLabel, count: users.filter(u => !u.birthdate).length, unset: true },
+    ...ageGroups.map(g => {
+      const members = users.filter(u => u.birthdate && u.age >= g.min && u.age <= g.max);
+      return { label: g.label, count: members.length, unset: false, members };
+    }),
+    (() => {
+      const members = users.filter(u => !u.birthdate);
+      return { label: unsetLabel, count: members.length, unset: true, members };
+    })(),
   ];
 
   // 都道府県別の人数（多い順）
-  const prefectureCounts = Object.entries(
+  const prefectureGroups = Object.entries(
     users.reduce((acc, user) => {
       const key = user.prefecture || unsetLabel;
-      acc[key] = (acc[key] || 0) + 1;
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(user);
       return acc;
-    }, {} as Record<string, number>)
-  ).sort(([, a], [, b]) => b - a);
-  const maxPrefectureCount = prefectureCounts.length > 0 ? prefectureCounts[0][1] : 0;
+    }, {} as Record<string, User[]>)
+  ).sort(([, a], [, b]) => b.length - a.length);
+  const maxPrefectureCount = prefectureGroups.length > 0 ? prefectureGroups[0][1].length : 0;
+
+  const percentOf = (count: number) =>
+    users.length > 0 ? `${Math.round((count / users.length) * 1000) / 10}%` : '—';
+  const personUnit = language === 'ja' ? '人' : '';
+
+  // 市区町村ごとの人数（例: 神戸市 3人、姫路市 1人）
+  const cityBreakdown = (members: User[]) =>
+    Object.entries(
+      members.reduce((acc, u) => {
+        const key = u.city || unsetLabel;
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>)
+    )
+      .sort(([, a], [, b]) => b - a)
+      .map(([city, n]) => `${city} ${n}${personUnit}`)
+      .join(language === 'ja' ? '、' : ', ');
+
+  // グラフの下に開く詳細表。選んだ区分があればその区分だけを出す。
+  const renderDetail = (
+    rows: { key: string; members: User[]; unset: boolean }[],
+    selected: string | null,
+    onClearSelection: () => void,
+    showCities: boolean,
+  ) => {
+    const visible = selected ? rows.filter(r => r.key === selected) : rows.filter(r => r.members.length > 0);
+    return (
+      <div className="mt-3 border-t border-[#e2d5c0] pt-3">
+        {selected && (
+          <div className="flex items-center justify-between mb-2 text-sm">
+            <span className="text-[#7c4a1e]">
+              {language === 'ja' ? `「${selected}」の詳細` : `Details: ${selected}`}
+            </span>
+            <button type="button" onClick={onClearSelection} className="text-[#c17f3a] underline underline-offset-2">
+              {language === 'ja' ? 'すべて表示' : 'Show all'}
+            </button>
+          </div>
+        )}
+        {visible.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">
+            {language === 'ja' ? '該当するユーザーはいません' : 'No users'}
+          </p>
+        ) : (
+          <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+            {visible.map(row => (
+              <div key={row.key} className="text-sm">
+                <div className="flex items-baseline justify-between gap-2 mb-1">
+                  <span className={`font-medium ${row.unset ? 'text-gray-500' : 'text-[#3d1f00]'}`}>{row.key}</span>
+                  <span className="text-[#5c3d20]">
+                    <span className="font-bold">{row.members.length}{personUnit}</span>
+                    <span className="text-[#a07850] ml-1.5">({percentOf(row.members.length)})</span>
+                  </span>
+                </div>
+                {showCities && row.members.length > 0 && (
+                  <p className="text-xs text-[#a07850] mb-1">{cityBreakdown(row.members)}</p>
+                )}
+                <div className="flex flex-wrap gap-1">
+                  {row.members.map(u => (
+                    <span key={u.id} className="px-2 py-0.5 bg-[#fdf5ea] border border-[#e2d5c0] text-[#5c3d20] text-xs rounded-full">
+                      {u.nickname}
+                      <span className="text-[#a07850] ml-1">
+                        {showCities
+                          ? (u.birthdate ? `${u.age}${language === 'ja' ? '歳' : ''}` : '')
+                          : (u.prefecture || '')}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // 「詳しく見る」ボタン（グラフの下に置く）
+  const renderDetailToggle = (open: boolean, onToggle: () => void) => (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="mt-3 w-full flex items-center justify-center gap-1 py-2 text-sm text-[#7c4a1e] border border-[#e2d5c0] rounded-lg hover:bg-[#fdf5ea] hover:border-[#c17f3a] transition-colors"
+    >
+      {open ? (language === 'ja' ? '詳細を閉じる' : 'Hide details') : (language === 'ja' ? '詳しく見る' : 'View details')}
+      <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
+    </button>
+  );
 
   const badgeCounts = users.reduce((acc, user) => {
     user.tasteBadges.forEach(badge => {
@@ -371,7 +466,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
                 {/* 年代別の人数 */}
                 <div className="bg-white border border-[#e2d5c0] rounded-lg p-4">
                   <h3 className="font-medium text-[#3d1f00] mb-3">
@@ -386,15 +481,40 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                           cursor={{ fill: '#fdf5ea' }}
                           formatter={(value: number) => [`${value}${language === 'ja' ? '人' : ''}`, language === 'ja' ? '人数' : 'Users']}
                         />
-                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                        <Bar
+                          dataKey="count"
+                          radius={[4, 4, 0, 0]}
+                          cursor="pointer"
+                          onClick={(entry: any) => {
+                            // 棒を押すと、その年代の詳細を下に開く
+                            const label = entry?.label ?? entry?.payload?.label;
+                            if (!label) return;
+                            setSelectedAgeGroup(label);
+                            setAgeDetailOpen(true);
+                          }}
+                        >
                           {ageData.map(d => (
-                            <Cell key={d.label} fill={d.unset ? '#d6cbb8' : '#7c4a1e'} />
+                            <Cell
+                              key={d.label}
+                              fill={d.unset ? '#d6cbb8' : '#7c4a1e'}
+                              fillOpacity={selectedAgeGroup && ageDetailOpen && selectedAgeGroup !== d.label ? 0.35 : 1}
+                            />
                           ))}
                           <LabelList dataKey="count" position="top" style={{ fontSize: 12, fill: '#3d1f00' }} />
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                  {renderDetailToggle(ageDetailOpen, () => {
+                    setAgeDetailOpen(v => !v);
+                    setSelectedAgeGroup(null);
+                  })}
+                  {ageDetailOpen && renderDetail(
+                    ageData.map(d => ({ key: d.label, members: d.members, unset: d.unset })),
+                    selectedAgeGroup,
+                    () => setSelectedAgeGroup(null),
+                    false,
+                  )}
                 </div>
 
                 {/* 都道府県別の人数 */}
@@ -403,27 +523,46 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                     <MapPin size={16} className="text-[#c17f3a]" />
                     {language === 'ja' ? '地域別のユーザー数' : 'Users by prefecture'}
                   </h3>
-                  {prefectureCounts.length === 0 ? (
+                  {prefectureGroups.length === 0 ? (
                     <p className="text-sm text-gray-400 py-8 text-center">
                       {language === 'ja' ? '登録ユーザーがいません' : 'No registered users'}
                     </p>
                   ) : (
-                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                      {prefectureCounts.map(([prefecture, count]) => (
-                        <div key={prefecture} className="flex items-center gap-2 text-sm">
-                          <span className="w-20 flex-shrink-0 text-[#5c3d20] truncate">{prefecture}</span>
-                          <div className="flex-1 h-4 bg-[#fdf5ea] rounded">
-                            <div
-                              className={`h-4 rounded ${prefecture === unsetLabel ? 'bg-[#d6cbb8]' : 'bg-[#c17f3a]'}`}
-                              style={{ width: `${(count / maxPrefectureCount) * 100}%` }}
-                            />
-                          </div>
-                          <span className="w-10 text-right font-medium text-[#3d1f00]">
-                            {count}{language === 'ja' ? '人' : ''}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="space-y-1 max-h-56 overflow-y-auto pr-1">
+                      {prefectureGroups.map(([prefecture, members]) => {
+                        const dimmed = prefDetailOpen && selectedPrefecture !== null && selectedPrefecture !== prefecture;
+                        return (
+                          // 行を押すと、その都道府県の詳細を下に開く
+                          <button
+                            key={prefecture}
+                            type="button"
+                            onClick={() => { setSelectedPrefecture(prefecture); setPrefDetailOpen(true); }}
+                            className={`w-full flex items-center gap-2 text-sm rounded px-1 py-0.5 hover:bg-[#fdf5ea] transition-opacity ${dimmed ? 'opacity-40' : ''}`}
+                          >
+                            <span className="w-20 flex-shrink-0 text-left text-[#5c3d20] truncate">{prefecture}</span>
+                            <div className="flex-1 h-4 bg-[#fdf5ea] rounded">
+                              <div
+                                className={`h-4 rounded ${prefecture === unsetLabel ? 'bg-[#d6cbb8]' : 'bg-[#c17f3a]'}`}
+                                style={{ width: `${(members.length / maxPrefectureCount) * 100}%` }}
+                              />
+                            </div>
+                            <span className="w-10 text-right font-medium text-[#3d1f00]">
+                              {members.length}{personUnit}
+                            </span>
+                          </button>
+                        );
+                      })}
                     </div>
+                  )}
+                  {prefectureGroups.length > 0 && renderDetailToggle(prefDetailOpen, () => {
+                    setPrefDetailOpen(v => !v);
+                    setSelectedPrefecture(null);
+                  })}
+                  {prefDetailOpen && renderDetail(
+                    prefectureGroups.map(([prefecture, members]) => ({ key: prefecture, members, unset: prefecture === unsetLabel })),
+                    selectedPrefecture,
+                    () => setSelectedPrefecture(null),
+                    true,
                   )}
                 </div>
               </div>
