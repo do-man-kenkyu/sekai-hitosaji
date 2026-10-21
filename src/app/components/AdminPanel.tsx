@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText, Image as ImageIcon, Download } from 'lucide-react';
+import { X, Users, User as UserIcon, BarChart3, Search, Package, Mail, Newspaper, Pencil, Trash2, Loader2, FileText, Image as ImageIcon, Download, ChevronDown, MapPin } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { User, Condiment } from '../types';
 import { Language, t } from '../i18n/translations';
 import { getMonthlySearchStats } from '../searchLog';
@@ -27,6 +28,7 @@ type Tab = 'stats' | 'condiments' | 'search' | 'inquiries' | 'articles';
 
 export function AdminPanel({ users, condiments, onClose, language }: AdminPanelProps) {
   const [tab, setTab] = useState<Tab>('stats');
+  const [showUserList, setShowUserList] = useState(false);
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [inquiriesLoading, setInquiriesLoading] = useState(false);
 
@@ -248,11 +250,35 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
     return acc;
   }, {} as Record<string, number>);
 
-  // 生年月日が登録されているユーザーのみで平均年齢を算出する
-  const usersWithAge = users.filter(u => u.birthdate);
-  const avgAge = usersWithAge.length > 0
-    ? (usersWithAge.reduce((sum, user) => sum + user.age, 0) / usersWithAge.length).toFixed(1)
-    : '—';
+  // 年代別の人数。平均だけでは偏りが分からないため分布で見せる。
+  // 生年月日が無いユーザー（法人アカウント等）は「未登録」にまとめる。
+  const unsetLabel = language === 'ja' ? '未登録' : 'Not set';
+  const ageGroups = [
+    { label: language === 'ja' ? '〜19歳' : '-19', min: 0, max: 19 },
+    { label: language === 'ja' ? '20代' : '20s', min: 20, max: 29 },
+    { label: language === 'ja' ? '30代' : '30s', min: 30, max: 39 },
+    { label: language === 'ja' ? '40代' : '40s', min: 40, max: 49 },
+    { label: language === 'ja' ? '50代' : '50s', min: 50, max: 59 },
+    { label: language === 'ja' ? '60歳〜' : '60+', min: 60, max: Infinity },
+  ];
+  const ageData = [
+    ...ageGroups.map(g => ({
+      label: g.label,
+      count: users.filter(u => u.birthdate && u.age >= g.min && u.age <= g.max).length,
+      unset: false,
+    })),
+    { label: unsetLabel, count: users.filter(u => !u.birthdate).length, unset: true },
+  ];
+
+  // 都道府県別の人数（多い順）
+  const prefectureCounts = Object.entries(
+    users.reduce((acc, user) => {
+      const key = user.prefecture || unsetLabel;
+      acc[key] = (acc[key] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>)
+  ).sort(([, a], [, b]) => b - a);
+  const maxPrefectureCount = prefectureCounts.length > 0 ? prefectureCounts[0][1] : 0;
 
   const badgeCounts = users.reduce((acc, user) => {
     user.tasteBadges.forEach(badge => {
@@ -327,14 +353,10 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 </p>
                 <DownloadButton onClick={downloadUsers} busyKey="users" />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-blue-900 mb-1">{t(language, 'totalUsers')}</h3>
                   <p className="text-3xl font-bold text-blue-600">{users.length}</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h3 className="text-sm font-medium text-green-900 mb-1">{t(language, 'age')}</h3>
-                  <p className="text-3xl font-bold text-green-600">{avgAge}{avgAge !== '—' && (language === 'ja' ? '歳' : ' yrs')}</p>
                 </div>
                 <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
                   <h3 className="text-sm font-medium text-purple-900 mb-2">{t(language, 'gender')}</h3>
@@ -346,6 +368,63 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                       </div>
                     ))}
                   </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                {/* 年代別の人数 */}
+                <div className="bg-white border border-[#e2d5c0] rounded-lg p-4">
+                  <h3 className="font-medium text-[#3d1f00] mb-3">
+                    {language === 'ja' ? '年代別のユーザー数' : 'Users by age group'}
+                  </h3>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={ageData} margin={{ top: 20, right: 8, left: -20, bottom: 0 }}>
+                        <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#5c3d20' }} tickLine={false} axisLine={{ stroke: '#e2d5c0' }} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#a07850' }} tickLine={false} axisLine={false} />
+                        <Tooltip
+                          cursor={{ fill: '#fdf5ea' }}
+                          formatter={(value: number) => [`${value}${language === 'ja' ? '人' : ''}`, language === 'ja' ? '人数' : 'Users']}
+                        />
+                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                          {ageData.map(d => (
+                            <Cell key={d.label} fill={d.unset ? '#d6cbb8' : '#7c4a1e'} />
+                          ))}
+                          <LabelList dataKey="count" position="top" style={{ fontSize: 12, fill: '#3d1f00' }} />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* 都道府県別の人数 */}
+                <div className="bg-white border border-[#e2d5c0] rounded-lg p-4">
+                  <h3 className="font-medium text-[#3d1f00] mb-3 flex items-center gap-1.5">
+                    <MapPin size={16} className="text-[#c17f3a]" />
+                    {language === 'ja' ? '地域別のユーザー数' : 'Users by prefecture'}
+                  </h3>
+                  {prefectureCounts.length === 0 ? (
+                    <p className="text-sm text-gray-400 py-8 text-center">
+                      {language === 'ja' ? '登録ユーザーがいません' : 'No registered users'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {prefectureCounts.map(([prefecture, count]) => (
+                        <div key={prefecture} className="flex items-center gap-2 text-sm">
+                          <span className="w-20 flex-shrink-0 text-[#5c3d20] truncate">{prefecture}</span>
+                          <div className="flex-1 h-4 bg-[#fdf5ea] rounded">
+                            <div
+                              className={`h-4 rounded ${prefecture === unsetLabel ? 'bg-[#d6cbb8]' : 'bg-[#c17f3a]'}`}
+                              style={{ width: `${(count / maxPrefectureCount) * 100}%` }}
+                            />
+                          </div>
+                          <span className="w-10 text-right font-medium text-[#3d1f00]">
+                            {count}{language === 'ja' ? '人' : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -361,10 +440,24 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                 </div>
               </div>
 
-              <h3 className="font-medium mb-4 flex items-center gap-2">
-                <UserIcon size={20} />
-                {t(language, 'userList')} ({users.length}{language === 'ja' ? '人' : ''})
-              </h3>
+              {/* ユーザー一覧は長くなるので、押したときだけ開く */}
+              <button
+                type="button"
+                onClick={() => setShowUserList(v => !v)}
+                className="w-full flex items-center justify-between gap-2 px-4 py-3 mb-4 bg-[#fdf5ea] border border-[#e2d5c0] rounded-lg text-[#3d1f00] hover:border-[#c17f3a] transition-colors"
+              >
+                <span className="font-medium flex items-center gap-2">
+                  <UserIcon size={20} />
+                  {t(language, 'userList')} ({users.length}{language === 'ja' ? '人' : ''})
+                </span>
+                <span className="flex items-center gap-1 text-sm text-[#7c4a1e]">
+                  {showUserList
+                    ? (language === 'ja' ? '閉じる' : 'Hide')
+                    : (language === 'ja' ? '開いて見る' : 'Show')}
+                  <ChevronDown size={18} className={`transition-transform ${showUserList ? 'rotate-180' : ''}`} />
+                </span>
+              </button>
+              {showUserList && (<>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
@@ -404,6 +497,7 @@ export function AdminPanel({ users, condiments, onClose, language }: AdminPanelP
                   {language === 'ja' ? '登録ユーザーがいません' : 'No registered users'}
                 </div>
               )}
+              </>)}
             </>
           )}
 
