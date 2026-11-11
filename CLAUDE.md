@@ -11,6 +11,9 @@ pnpm build      # 本番ビルド
 
 lint・テストのスクリプトは未設定。
 
+### デプロイ
+`main` ブランチへの push で `.github/workflows/deploy.yml` が GitHub Pages にデプロイする。本番は `/sekai-hitosaji/` のサブパスで配信されるため、`vite.config.ts` は `build` 時のみ `base: '/sekai-hitosaji/'` を設定している。`public/` 配下の画像パスは `src/app/assetPath.ts` の `withBase()` を通すこと。
+
 ## 環境変数
 
 `.env` ファイルが必要：
@@ -33,14 +36,19 @@ VITE_EMAILJS_PUBLIC_KEY=
 ## アーキテクチャ
 
 ### 状態管理
-アプリ全体の状態は `src/app/App.tsx`（約1400行の単一コンポーネント）に集約されている。ルーターは使用していない。画面遷移は状態フラグによる条件付きレンダリングで実現。
+アプリ全体の状態は `src/app/App.tsx`（約1650行の単一コンポーネント）に集約されている。ルーターは使用していない。画面遷移は状態フラグによる条件付きレンダリングで実現。
 
 主な状態フラグ：
 - `activeTab`: `'home' | 'search' | 'trends' | 'ranking'`
 - `showNavMenu`: PC用ハンバーガーメニューの開閉
-- `showLoginModal`, `showMyPage`, `showChat`, `showCombination`, `showAddForm`
+- `showLoginModal`, `showUserRegistration`, `showMyPage`, `showChat`, `showCombination`, `showAddForm`, `showAdminPanel`, `showContact`
+- `showLegal`: `'terms' | 'privacy' | null`（LegalModal 表示用）
+- `editingCondiment`: 投稿の編集対象
+- `shareModalName`: ShareModal 表示用
 - `selectedCondiment`: CondimentDetail 表示用
 - `selectedAggregated`: CondimentReviews 表示用
+- `selectedUserPosts`: UserPosts（特定ユーザーの投稿一覧）表示用
+- `filterCategory` / `filterOrigin` / `filterPurchase`: 一覧の絞り込み（産地・購入場所バッジから設定）
 
 ### バックエンド（Supabase）
 
@@ -50,18 +58,52 @@ VITE_EMAILJS_PUBLIC_KEY=
 | `src/lib/auth.ts` | `signUp` / `signIn` / `signOut` / `getProfile` / `updateProfile` |
 | `src/lib/database.ts` | 調味料 CRUD、いいね・ブックマーク、`fetchAllLikeCounts()` |
 | `src/lib/storage.ts` | `condiment-images` バケットへの画像アップロード |
+| `src/lib/inquiries.ts` | お問い合わせの保存・取得（`inquiries` テーブル） |
+| `src/lib/emailNotify.ts` | お問い合わせ時の EmailJS 通知メール送信 |
+| `src/lib/trendArticles.ts` | トレンド欄の運営お知らせ記事 CRUD（PDF添付対応。テーブル・列が未作成でも落ちないよう判定関数あり） |
 | `src/lib/database.types.ts` | DB スキーマに対応した TypeScript 型 |
 | `supabase_schema.sql` | RLS ポリシー・トリガーを含む完全なスキーマ定義（新規プロジェクト時は Supabase SQL Editor で実行する） |
 
+#### SQL マイグレーション（リポジトリ直下）
+`supabase_schema.sql` 以外は既存プロジェクトに対する差分スクリプトで、いずれも Supabase SQL Editor で一度だけ実行する。
+
+| ファイル | 内容 |
+|---|---|
+| `supabase_seed_condiments.sql` | 調味料22件の登録 |
+| `supabase_add_pairing_column.sql` | `condiments` に「相性のよい調味料」列を追加 |
+| `supabase_split_private_profile.sql` | 年齢・性別・居住地を非公開テーブルへ分離 |
+| `supabase_add_fullname_birthdate.sql` | 氏名（管理者のみ閲覧）・生年月日を追加 |
+| `supabase_migrate_profile_all.sql` | 上記プロフィール構造（`profile_private` / `profile_admin_only`）への一括移行 |
+| `supabase_fix_profile_trigger.sql` | 新規登録時にプロフィールが反映されない不具合の修正 |
+| `supabase_add_inquiries_table.sql` | お問い合わせテーブル追加 |
+| `supabase_add_trend_articles.sql` / `supabase_update_trend_articles.sql` / `supabase_add_article_pdf.sql` / `supabase_make_article_body_optional.sql` | トレンドお知らせ記事テーブルの作成・更新・PDF添付・本文任意化 |
+| `supabase_update_repo_url.sql` | リポジトリ移管に伴う `image_url` 一括置換 |
+| `supabase_change_dohman_email.sql` | 「道満調味料研究所」アカウントのログインメール変更 |
+
+### その他のユーティリティ（`src/app/`）
+
+| ファイル | 役割 |
+|---|---|
+| `admin.ts` | 管理者メール一覧 `ADMIN_EMAILS` と `isAdmin()` |
+| `idleLogout.ts` | 1時間無操作で自動ログアウト（最終操作時刻を localStorage に保持） |
+| `chatHistory.ts` | AIチャット履歴を sessionStorage に保持（ログアウト時に破棄） |
+| `searchLog.ts` | 検索キーワードを月別に localStorage へ記録し管理パネルで集計 |
+| `translate.ts` | ユーザー投稿文の翻訳（Google 翻訳の非公式エンドポイント、モジュール内キャッシュ） |
+| `legalContent.ts` | 利用規約・プライバシーポリシー本文（ja/en） |
+| `categoryImages.ts` | カテゴリ代表画像と絵文字フォールバック |
+| `assetPath.ts` | `withBase()`（GitHub Pages の base パス付与） |
+| `types.ts` | 共通型定義 |
+| `utils/` | `age.ts`（年齢算出）・`aggregateCondiments.ts`（同名調味料の集約）・`csv.ts`（CSV出力） |
+
 ### データフロー
 1. マウント時に `App.tsx` が `supabase.auth.getSession()` と `fetchCondiments()` を呼ぶ
-2. Supabase DB に調味料がなければインメモリのサンプルデータ（12件）にフォールバック
+2. Supabase DB から取得できない・空の場合は localStorage（`condimentsVersion` が `4.3` のもの）→ インメモリのサンプルデータ（22件）の順にフォールバック
 3. `onAuthStateChange` で `currentUser` を同期
 4. `NotificationBell.tsx` では Supabase Realtime チャンネルでプッシュ通知を受信
 
 ### サンプルデータ（App.tsx インライン）
-Supabase から取得できない場合のフォールバック用。12種の世界調味料：
-ゆず胡椒・ハリッサ・コチュジャン・西京白味噌・タヒニ・ナンプラー・バルサミコ酢・塩麹・四川花椒・エキストラバージンオリーブオイル・ラー油・ぬちまーす
+Supabase から取得できない場合のフォールバック用。道満調味料研究所の掲載商品22件（id: `dm-001`〜）：
+みどりのラー油・薫る焦がし醤油・離宮の食べる七味・心のぽん酢醤油・生きてる醤油・北海道の鰹節香るだし醤油・底引きたまり・ひしほ・赤ぽん酢・伊達の旨塩・笹川流れの塩・深層海塩ハマネ焼塩・マスターネ。木桶醤油・いしる・トマトバ塩・ジンジャーママ しょうが生ふりかけ・卵かけごはんにかける醤油・卵に醤油・きくらげラー油・しろたまり・玉子ごはん専用昆布醤油・みんなのニラ醤油
 
 ### コンポーネント一覧（`src/app/components/`）
 
@@ -78,12 +120,20 @@ Supabase から取得できない場合のフォールバック用。12種の世
 | `LoginModal.tsx` | ログインモーダル |
 | `AddCondimentForm.tsx` | 調味料投稿フォーム |
 | `MyPage.tsx` | マイページ |
-| `AdminPanel.tsx` | 管理パネル |
+| `AdminPanel.tsx` | 管理パネル（年代別・地域別ユーザー数グラフ、区分ごとのユーザー一覧、検索ログ、お問い合わせ、お知らせ記事管理） |
 | `CombinationPage.tsx` | 調味料組み合わせページ |
 | `TasteRadarChart.tsx` | 味覚レーダーチャート |
 | `Comments.tsx` | コメント・返信機能 |
 | `NotificationBell.tsx` | 通知ベル（Realtime） |
 | `TranslateModal.tsx` | 翻訳モーダル |
+| `AdCarousel.tsx` | 広告カルーセル |
+| `CategoryIllustration.tsx` | カテゴリごとの手描き風SVGイラスト |
+| `CondimentMap.tsx` | 産地マップ（Leaflet、都道府県庁所在地の座標で表示） |
+| `ContactModal.tsx` | お問い合わせフォーム（Supabase保存 + EmailJS通知） |
+| `LegalModal.tsx` | 利用規約・プライバシーポリシー閲覧モーダル |
+| `PdfInline.tsx` | お知らせ記事のPDFインライン表示（pdfjs-dist、最大10ページ） |
+| `ShareModal.tsx` | 調味料のシェア |
+| `UserPosts.tsx` | 特定ユーザーの投稿一覧 |
 
 ### デザインシステム（和モダン）
 全コンポーネントを以下のカラーパレットで統一：
@@ -98,13 +148,15 @@ Supabase から取得できない場合のフォールバック用。12種の世
 | ライトクリーム | `#fdf5ea` | カード背景・セクション背景 |
 
 ### 多言語対応
-7言語対応：`ja` / `en` / `zh` / `ko` / `fr` / `es` / `vi`
+7言語分の型・翻訳キーを持つ：`ja` / `en` / `zh` / `ko` / `fr` / `es` / `vi`
+ただし現在は `App.tsx` の `LANGUAGE_OPTIONS` で **`ja` と `en` のみ有効**（他は `enabled: false`）。
 文字列は `src/app/i18n/translations.ts` の `t(language, key)` を通す。
 言語切替は header の `<select>` ドロップダウン（フラグ絵文字付き）。
 
 ### ナビゲーション構造
 - **スマホ（SP）**: 下部固定タブバー（ホーム・検索・ランキング・マイページ）
-- **PC（sm:）**: ハンバーガーボタン → ドロップダウンメニュー（ホーム・調味料一覧・トレンド・ランキング・AIチャット・マイページ・投稿する・組み合わせ）
+- **PC（sm:）**: ハンバーガーボタン → ドロップダウンメニュー（ホーム・調味料一覧・トレンド・AIチャット・組み合わせ・お問い合わせ・利用規約・プライバシーポリシー など）
+- 管理者（`isAdmin`）ログイン時はヘッダーに管理パネルボタンが出る
 - ランキングへのショートカット：SP検索バー横にトロフィーボタンを配置
 
 ### パーソナライズ
